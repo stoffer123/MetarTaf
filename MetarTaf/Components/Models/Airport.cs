@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 using MetarTaf.Components.Services;
-using MetarTaf.Components.Models;
 using MetarTaf.Components.Factories;
+using MetarTaf.Components.Models.MetarModels;
 
 namespace MetarTaf.Components.Models
 {
@@ -24,7 +17,7 @@ namespace MetarTaf.Components.Models
         public bool isNewTaf { get; set; }
 
         private Timer? timer;
-        private readonly MetarService metarService;
+        private readonly IMetarService metarService;
         private readonly TAFService tafService;
         private readonly AirportInfoService airportInfoService;
         private readonly SynchronizationContext? syncContext;
@@ -36,7 +29,7 @@ namespace MetarTaf.Components.Models
         // Delegate for notifying state changes
         public Action? OnStateChanged { get; set; }
 
-        public Airport(string icao, MetarService metarService, TAFService tafService, AirportInfoService airportInfoService)
+        public Airport(string icao, IMetarService metarService, TAFService tafService, AirportInfoService airportInfoService)
         {
             Icao = icao;
             Metars = new Dictionary<DateTime, Metar>();

@@ -4,19 +4,20 @@ using MetarTaf.Components.Factories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .Services
     .AddSingleton(new HttpClient())
-    .AddSingleton(sp => new MetarService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration)))
-    .AddSingleton(sp => new TAFService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration)))
-    .AddSingleton(sp => new AirportInfoService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration)));
+    .AddSingleton(sp => new MetarAvwxService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration))) //MetarService, select which API service to use here
+    .AddSingleton(sp => new TAFService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration))) //TAFService, select which API service to use here
+    .AddSingleton(sp => new AirportInfoService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration))); //AirportInfoService, select which API service to use here
 
 var app = builder.Build();
 
 // Initialize AirportFactory with the required services
-var metarService = app.Services.GetRequiredService<MetarService>();
+var metarService = app.Services.GetRequiredService<MetarAvwxService>();
 var tafService = app.Services.GetRequiredService<TAFService>();
 var airportInfoService = app.Services.GetRequiredService<AirportInfoService>();
 AirportFactory.Initialize(metarService, tafService, airportInfoService);

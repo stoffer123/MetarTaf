@@ -9,11 +9,11 @@ namespace MetarTaf.Components.Factories
     {
         private static readonly object lockObject = new object();
         public static readonly Dictionary<string, Airport> airports = new Dictionary<string, Airport>();
-        private static MetarService metarService;
+        private static IMetarService metarService;
         private static TAFService tafService;
         private static AirportInfoService airportInfoService;
 
-        public static void Initialize(MetarService metarSvc, TAFService tafSvc, AirportInfoService airportInfoSvc)
+        public static void Initialize(IMetarService metarSvc, TAFService tafSvc, AirportInfoService airportInfoSvc)
         {
             metarService = metarSvc;
             tafService = tafSvc;

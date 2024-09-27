@@ -1,9 +1,7 @@
 ﻿@page "/airport/{icao}"
 @using MetarTaf.Components.Services
 @using MetarTaf.Components.Models
-@inject MetarService MetarService
-@inject TAFService tafService
-@inject AirportInfoService AirportInfoService
+@using MetarTaf.Components.Factories
 @implements IDisposable
 @rendermode InteractiveServer
 
@@ -118,7 +116,7 @@ else
     {
         if (!string.IsNullOrEmpty(icao))
         {
-            airport = new Airport(icao, MetarService, tafService, AirportInfoService); // Replace with actual airport name if available
+            airport = AirportFactory.GetAirport(icao); // Replace with actual airport name if available
             airport.OnStateChanged = StateHasChanged; // Subscribe to state change notification
             await airport.InitializeAsync();
         }
@@ -135,6 +133,6 @@ else
 
     public void Dispose()
     {
-        airport?.Dispose();
+        AirportFactory.ReleaseAirport(icao);
     }
 }
