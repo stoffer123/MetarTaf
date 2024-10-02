@@ -2,14 +2,14 @@
 using MetarTaf.Components.Models;
 using System.Text.Json;
 
-namespace MetarTaf.Components.Services
+namespace MetarTaf.Components.Services.Avwx
 {
-    public class TAFService
+    public class AvwxTafService : ITafService
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
 
-        public TAFService(HttpClient httpClient, string apiKey)
+        public AvwxTafService(HttpClient httpClient, string apiKey)
         {
             _httpClient = httpClient;
             _apiKey = apiKey;

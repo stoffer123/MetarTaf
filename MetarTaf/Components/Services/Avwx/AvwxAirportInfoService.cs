@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 using MetarTaf.Components.Factories;
 using MetarTaf.Components.Models;
 
-namespace MetarTaf.Components.Services
+namespace MetarTaf.Components.Services.Avwx
 {
-    public class AirportInfoService
+    public class AvwxAirportInfoService : IAirportInfoService
     {
         private readonly HttpClient httpClient;
 
-        public AirportInfoService(HttpClient httpClient, string token)
+        public AvwxAirportInfoService(HttpClient httpClient, string token)
         {
             this.httpClient = httpClient;
             this.httpClient.BaseAddress = new Uri("https://avwx.rest/api/");

@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 using MetarTaf.Components.Factories;
 using MetarTaf.Components.Models.MetarModels;
 
-namespace MetarTaf.Components.Services
+namespace MetarTaf.Components.Services.Avwx
 {
-    public class MetarAvwxService : IMetarService
+    public class AvwxMetarService : IMetarService
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
 
-        public MetarAvwxService(HttpClient httpClient, string apiKey)
+        public AvwxMetarService(HttpClient httpClient, string apiKey)
         {
             _httpClient = httpClient;
             _apiKey = apiKey;
