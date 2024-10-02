@@ -7,9 +7,8 @@ namespace MetarTaf.Components.Models.MetarModels
 {
     public class Metar
     {
-        //Constructor for Avwx API
         //Create New constructor for each API
-        public Metar(MetarAvwx metar)
+        public Metar(MetarAvwx metar)  //Constructor for Avwx API
         {
             Altimeter = metar.Altimeter;
             Clouds = metar.Clouds;
