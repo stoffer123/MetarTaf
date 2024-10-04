@@ -1,4 +1,4 @@
-﻿using MetarTaf.Components.Models;
+﻿using MetarTaf.Components.Models.AirportInfoModels;
 
 namespace MetarTaf.Components.Services
 {

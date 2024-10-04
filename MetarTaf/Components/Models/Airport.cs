@@ -4,6 +4,7 @@ using MetarTaf.Components.Factories;
 using MetarTaf.Components.Models.MetarModels;
 using MetarTaf.Components.Services.Avwx;
 using MetarTaf.Components.Models.TafModels;
+using MetarTaf.Components.Models.AirportInfoModels;
 
 namespace MetarTaf.Components.Models
 {

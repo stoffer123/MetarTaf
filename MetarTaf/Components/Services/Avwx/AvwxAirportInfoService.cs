@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using MetarTaf.Components.Factories;
 using MetarTaf.Components.Models;
+using MetarTaf.Components.Models.AirportInfoModels;
 
 namespace MetarTaf.Components.Services.Avwx
 {
@@ -23,7 +24,12 @@ namespace MetarTaf.Components.Services.Avwx
             var response = await httpClient.GetAsync($"station/{ident}?format=json");
             response.EnsureSuccessStatusCode();
             var responseData = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<AirportInfo>(responseData);
+
+            AirportInfoAvwx airportInfoAvwx = JsonSerializer.Deserialize<AirportInfoAvwx>(responseData);
+
+            AirportInfo airportInfo = airportInfoAvwx.createAirportInfo();
+
+            return airportInfo;
         }
     }
 }
