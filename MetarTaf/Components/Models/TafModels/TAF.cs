@@ -1,20 +1,20 @@
-﻿namespace MetarTaf.Components.Models
+﻿namespace MetarTaf.Components.Models.TafModels
 {
     public class TAF
     {
-            public Meta? meta { get; set; }
-            public string? raw { get; set; }
-            public string? station { get; set; }
-            public Time? time { get; set; }
-            public string? remarks { get; set; }
-            public Forecast[]? forecast { get; set; }
-            public Start_Time? start_time { get; set; }
-            public End_Time? end_time { get; set; }
-            public string? max_temp { get; set; }
-            public string? min_temp { get; set; }
-            public object? alts { get; set; }
-            public object? temps { get; set; }
-            public Units? units { get; set; }
+        public Meta? meta { get; set; }
+        public string? raw { get; set; }
+        public string? station { get; set; }
+        public Time? time { get; set; }
+        public string? remarks { get; set; }
+        public Forecast[]? forecast { get; set; }
+        public Start_Time? start_time { get; set; }
+        public End_Time? end_time { get; set; }
+        public string? max_temp { get; set; }
+        public string? min_temp { get; set; }
+        public object? alts { get; set; }
+        public object? temps { get; set; }
+        public Units? units { get; set; }
 
 
         public class Meta

@@ -1,5 +1,5 @@
 ﻿using MetarTaf.Components.Factories;
-using MetarTaf.Components.Models;
+using MetarTaf.Components.Models.TafModels;
 using System.Text.Json;
 
 namespace MetarTaf.Components.Services.Avwx

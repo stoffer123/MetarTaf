@@ -1,4 +1,4 @@
-﻿using MetarTaf.Components.Models;
+﻿using MetarTaf.Components.Models.TafModels;
 
 namespace MetarTaf.Components.Services
 {
