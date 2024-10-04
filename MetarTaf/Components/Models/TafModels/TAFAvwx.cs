@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using MetarTaf.Components.Models.TafModels;
+using System.Text.Json.Serialization;
 
 namespace MetarTaf.Components.Models
 {
@@ -248,6 +249,17 @@ namespace MetarTaf.Components.Models
             public string? value { get; set; }
         }
 
+
+
+        public TAF createTAF()
+        {
+            TAF taf = new TAF();
+
+            taf.raw = this.raw;
+            taf.time.dt = this.time.dt;
+
+            return taf;
+        }
 
 
     }
