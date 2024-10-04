@@ -59,6 +59,7 @@ namespace MetarTaf.Components.Models.MetarModels
         [JsonPropertyName("time")]
         public TimeAvwx? Time { get; set; }
 
+
         [JsonPropertyName("units")]
         public UnitsAvwx? Units { get; set; }
 
@@ -68,8 +69,11 @@ namespace MetarTaf.Components.Models.MetarModels
         [JsonPropertyName("wind_direction")]
         public DataAvwx? WindDirection { get; set; }
 
+
         [JsonPropertyName("wind_gust")]
         public object? WindGust { get; set; }
+
+
         [JsonPropertyName("wind_speed")]
         public DataAvwx? WindSpeed { get; set; }
 
@@ -114,7 +118,7 @@ namespace MetarTaf.Components.Models.MetarModels
         public class TimeAvwx
         {
             [JsonPropertyName("dt")]
-            public DateTime Dt { get; set; }
+            public DateTime? Dt { get; set; }
 
             [JsonPropertyName("repr")]
             public string? Repr { get; set; }
@@ -176,7 +180,7 @@ namespace MetarTaf.Components.Models.MetarModels
             Metar metar = new Metar();
 
             metar.Raw = this.Raw;
-            metar.Time.Dt = Time.Dt;
+            metar.Time.Dt = this.Time.Dt;
 
             return metar;
         }

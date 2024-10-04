@@ -65,8 +65,8 @@
                     {
                         var metar = metarEntry.Value;
                         <tr>
-                            <td>@(metar.Time?.Dt.ToLocalTime().ToString("yyyy-MM-dd") ?? "Null")</td>
-                            <td>@(metar.Time?.Dt.ToLocalTime().ToString("HH:mm:ss") ?? "Null")</td>
+                            <td>@(metar.Time?.Dt?.ToLocalTime().ToString("yyyy-MM-dd") ?? "Null")</td>
+                            <td>@(metar.Time?.Dt?.ToLocalTime().ToString("HH:mm:ss") ?? "Null")</td>
                             <td>@(metar.Raw ?? "Null")</td>
                             <td>@(metar.FlightRules ?? "Null")</td>
                             <td>@(metar.Temperature?.Value.ToString() ?? "Null") @metar.Units?.Temperature</td>

@@ -12,25 +12,25 @@ namespace MetarTaf.Components.Models.MetarModels
         public Data? Altimeter { get; set; }
         public List<Data_Clouds>? Clouds { get; set; }
         public int DensityAltitude { get; set; }
-        public Data? Dewpoint { get; set; }
+        public Data? Dewpoint { get; set; } = new();
         public string? FlightRules { get; set; }
-        public Data_Meta? Meta { get; set; }
+        public Data_Meta? Meta { get; set; } = new();
         public List<object>? Other { get; set; }
         public int PressureAltitude { get; set; }
         public string? Raw { get; set; }
         public double RelativeHumidity { get; set; }
         public string? Remarks { get; set; }
-        public Data_RemarksInfo? RemarksInfo { get; set; }
+        public Data_RemarksInfo? RemarksInfo { get; set; } = new();
         public List<object>? RunwayVisibility { get; set; }
         public string? Sanitized { get; set; }
         public string? Station { get; set; }
-        public Data? Temperature { get; set; }
-        public Data_Time? Time { get; set; }
-        public Data_Units? Units { get; set; }
-        public Data? Visibility { get; set; }
-        public Data? WindDirection { get; set; }
-        public object? WindGust { get; set; }
-        public Data? WindSpeed { get; set; }
+        public Data? Temperature { get; set; } = new();
+        public Data_Time? Time { get; set; } = new();
+        public Data_Units? Units { get; set; } = new();
+        public Data? Visibility { get; set; } = new();
+        public Data? WindDirection { get; set; } = new();
+        public object? WindGust { get; set; } = new();
+        public Data? WindSpeed { get; set; } = new();
         public List<Data>? WindVariableDirection { get; set; }
         public List<object>? WxCodes { get; set; }
 
@@ -52,7 +52,7 @@ namespace MetarTaf.Components.Models.MetarModels
 
         public class Data_Time
         {
-            public DateTime Dt { get; set; }
+            public DateTime? Dt { get; set; }
             public string? Repr { get; set; }
         }
 
