@@ -35,8 +35,8 @@ namespace MetarTaf.Components.Services.Avwx
                     PropertyNameCaseInsensitive = true
                 };
                 MetarAvwx MetarAvwx = JsonSerializer.Deserialize<MetarAvwx>(responseBody, options);
-
-                return new Metar(MetarAvwx);
+                Metar metar = MetarAvwx.createMetar();
+                return metar;
             }
             catch (JsonException ex)
             {
