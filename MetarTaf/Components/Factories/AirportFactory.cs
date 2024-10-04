@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using MetarTaf.Components.Models;
 using MetarTaf.Components.Services;
+using MetarTaf.Components.Services.Avwx;
 
 namespace MetarTaf.Components.Factories
 {
@@ -9,11 +10,11 @@ namespace MetarTaf.Components.Factories
     {
         private static readonly object lockObject = new object();
         public static readonly Dictionary<string, Airport> airports = new Dictionary<string, Airport>();
-        private static MetarService metarService;
-        private static TAFService tafService;
-        private static AirportInfoService airportInfoService;
+        private static IMetarService metarService;
+        private static ITafService tafService;
+        private static IAirportInfoService airportInfoService;
 
-        public static void Initialize(MetarService metarSvc, TAFService tafSvc, AirportInfoService airportInfoSvc)
+        public static void Initialize(IMetarService metarSvc, ITafService tafSvc, IAirportInfoService airportInfoSvc)
         {
             metarService = metarSvc;
             tafService = tafSvc;

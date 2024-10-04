@@ -1,4 +1,5 @@
 using MetarTaf.Components.Services;
+using MetarTaf.Components.Services.Avwx;
 using Moq;
 using Moq.Protected;
 using System.Net;
@@ -9,7 +10,7 @@ namespace MetarTaf.Tests
     {
         private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
         private readonly HttpClient _mockHttpClient;
-        private readonly MetarService _metarService;
+        private readonly IMetarService _metarService;
         private const string ApiKey = "test-api-key";
 
         public MetarServiceTests()
@@ -19,7 +20,7 @@ namespace MetarTaf.Tests
             {
                 BaseAddress = new Uri("https://avwx.rest/")
             };
-            _metarService = new MetarService(_mockHttpClient, ApiKey);
+            _metarService = new AvwxMetarService(_mockHttpClient, ApiKey);
         }
 
         [Fact]

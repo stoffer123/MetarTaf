@@ -1,20 +1,20 @@
-﻿namespace MetarTaf.Components.Models
+﻿namespace MetarTaf.Components.Models.TafModels
 {
     public class TAF
     {
-            public Meta? meta { get; set; }
-            public string? raw { get; set; }
-            public string? station { get; set; }
-            public Time? time { get; set; }
-            public string? remarks { get; set; }
-            public Forecast[]? forecast { get; set; }
-            public Start_Time? start_time { get; set; }
-            public End_Time? end_time { get; set; }
-            public string? max_temp { get; set; }
-            public string? min_temp { get; set; }
-            public object? alts { get; set; }
-            public object? temps { get; set; }
-            public Units? units { get; set; }
+        public Meta? meta { get; set; } = new();
+        public string? raw { get; set; }
+        public string? station { get; set; }
+        public Time? time { get; set; } = new();
+        public string? remarks { get; set; }
+        public Forecast[]? forecast { get; set; }
+        public Start_Time? start_time { get; set; } = new();
+        public End_Time? end_time { get; set; } = new();
+        public string? max_temp { get; set; }
+        public string? min_temp { get; set; }
+        public object? alts { get; set; }
+        public object? temps { get; set; }
+        public Units? units { get; set; } = new();
 
 
         public class Meta
@@ -56,16 +56,16 @@
             public string? flight_rules { get; set; }
             public object[]? other { get; set; }
             public string? sanitized { get; set; }
-            public Visibility? visibility { get; set; }
-            public Wind_Direction? wind_direction { get; set; }
-            public Wind_Gust? wind_gust { get; set; }
-            public Wind_Speed? wind_speed { get; set; }
+            public Visibility? visibility { get; set; } = new();
+            public Wind_Direction? wind_direction { get; set; } = new();
+            public Wind_Gust? wind_gust { get; set; } = new();
+            public Wind_Speed? wind_speed { get; set; } = new();
             public Wx_Codes[]? wx_codes { get; set; }
-            public End_Time1? end_time { get; set; }
+            public End_Time1? end_time { get; set; } = new();
             public object[]? icing { get; set; }
             public object? probability { get; set; }
             public string? raw { get; set; }
-            public Start_Time1? start_time { get; set; }
+            public Start_Time1? start_time { get; set; } = new();
             public object[]? turbulence { get; set; }
             public string? type { get; set; }
             public object? wind_shear { get; set; }

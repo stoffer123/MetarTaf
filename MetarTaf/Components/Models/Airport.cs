@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 using MetarTaf.Components.Services;
-using MetarTaf.Components.Models;
 using MetarTaf.Components.Factories;
+using MetarTaf.Components.Models.MetarModels;
+using MetarTaf.Components.Services.Avwx;
+using MetarTaf.Components.Models.TafModels;
+using MetarTaf.Components.Models.AirportInfoModels;
 
 namespace MetarTaf.Components.Models
 {
@@ -24,19 +20,20 @@ namespace MetarTaf.Components.Models
         public bool isNewTaf { get; set; }
 
         private Timer? timer;
-        private readonly MetarService metarService;
-        private readonly TAFService tafService;
-        private readonly AirportInfoService airportInfoService;
+        private readonly IMetarService metarService;
+        private readonly ITafService tafService;
+        private readonly IAirportInfoService airportInfoService;
         private readonly SynchronizationContext? syncContext;
         private readonly string metarStorageFilePath;
         private readonly string tafStorageFilePath;
         private readonly string infoStorageFilePath;
+        private readonly Func<Task>? invokeStateChange;
         public int referenceCount { get; set; }
 
         // Delegate for notifying state changes
         public Action? OnStateChanged { get; set; }
 
-        public Airport(string icao, MetarService metarService, TAFService tafService, AirportInfoService airportInfoService)
+        public Airport(string icao, IMetarService metarService, ITafService tafService, IAirportInfoService airportInfoService, Func<Task>? invokeStateChange = null)
         {
             Icao = icao;
             Metars = new Dictionary<DateTime, Metar>();
@@ -45,6 +42,7 @@ namespace MetarTaf.Components.Models
             this.metarService = metarService;
             this.tafService = tafService;
             this.airportInfoService = airportInfoService;
+            this.invokeStateChange = invokeStateChange;
             syncContext = SynchronizationContext.Current;
 
             // Ensure the resources/metars folder exists
@@ -254,13 +252,14 @@ namespace MetarTaf.Components.Models
 
         private void NotifyStateChanged()
         {
-            if (syncContext != null)
+            if (invokeStateChange != null)
             {
-                syncContext.Post(_ => OnStateChanged?.Invoke(), null);
+                // Invoke the state change on the Blazor rendering context
+                _ = invokeStateChange();
             }
             else
             {
-                OnStateChanged?.Invoke();
+                OnStateChanged?.Invoke(); // Fallback for non-Blazor scenarios
             }
         }
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MetarTaf.Components.Models
+namespace MetarTaf.Components.Models.AirportInfoModels
 {
     public class AirportInfo
     {
@@ -18,7 +18,7 @@ namespace MetarTaf.Components.Models
         public string name { get; set; }
         public string note { get; set; }
         public bool reporting { get; set; }
-        public List<Runway> runways { get; set; }
+        public List<Runway> runways { get; set; } = new();
         public string state { get; set; }
         public string type { get; set; }
         public string website { get; set; }

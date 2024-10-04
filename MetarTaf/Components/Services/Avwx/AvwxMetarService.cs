@@ -3,16 +3,16 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using MetarTaf.Components.Factories;
-using MetarTaf.Components.Models;
+using MetarTaf.Components.Models.MetarModels;
 
-namespace MetarTaf.Components.Services
+namespace MetarTaf.Components.Services.Avwx
 {
-    public class MetarService
+    public class AvwxMetarService : IMetarService
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
 
-        public MetarService(HttpClient httpClient, string apiKey)
+        public AvwxMetarService(HttpClient httpClient, string apiKey)
         {
             _httpClient = httpClient;
             _apiKey = apiKey;
@@ -34,7 +34,9 @@ namespace MetarTaf.Components.Services
                 {
                     PropertyNameCaseInsensitive = true
                 };
-                return JsonSerializer.Deserialize<Metar>(responseBody, options);
+                MetarAvwx MetarAvwx = JsonSerializer.Deserialize<MetarAvwx>(responseBody, options);
+                Metar metar = MetarAvwx.createMetar();
+                return metar;
             }
             catch (JsonException ex)
             {

@@ -1,15 +1,16 @@
 ﻿using MetarTaf.Components.Factories;
 using MetarTaf.Components.Models;
+using MetarTaf.Components.Models.TafModels;
 using System.Text.Json;
 
-namespace MetarTaf.Components.Services
+namespace MetarTaf.Components.Services.Avwx
 {
-    public class TAFService
+    public class AvwxTafService : ITafService
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
 
-        public TAFService(HttpClient httpClient, string apiKey)
+        public AvwxTafService(HttpClient httpClient, string apiKey)
         {
             _httpClient = httpClient;
             _apiKey = apiKey;
@@ -31,7 +32,11 @@ namespace MetarTaf.Components.Services
                 {
                     PropertyNameCaseInsensitive = true
                 };
-                return JsonSerializer.Deserialize<TAF>(responseBody, options);
+                TAFAvwx tafAvwx = JsonSerializer.Deserialize<TAFAvwx>(responseBody, options);
+
+                TAF taf = tafAvwx.createTAF();
+
+                return taf;
             }
             catch (JsonException ex)
             {
