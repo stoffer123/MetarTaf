@@ -13,14 +13,14 @@ builder.Services.AddRazorComponents()
     .AddSingleton(new HttpClient()) // Register HttpClient as a Singleton
                                     // Services - CHANGE HERE WHEN CHANGING API
     .AddSingleton(sp => new AwcMetarService(sp.GetRequiredService<HttpClient>())) // MetarService
-    .AddSingleton(sp => new AvwxTafService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration))) // TAFService
+    .AddSingleton(sp => new AwcTafService(sp.GetRequiredService<HttpClient>())) // TAFService
     .AddSingleton(sp => new AvwxAirportInfoService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration))); // AirportInfoService
 
 var app = builder.Build();
 
 // Initialize AirportFactory with the required services
 var metarService = app.Services.GetRequiredService<AwcMetarService>();
-var tafService = app.Services.GetRequiredService<AvwxTafService>();
+var tafService = app.Services.GetRequiredService<AwcTafService>();
 var airportInfoService = app.Services.GetRequiredService<AvwxAirportInfoService>();
 AirportFactory.Initialize(metarService, tafService, airportInfoService);
 
