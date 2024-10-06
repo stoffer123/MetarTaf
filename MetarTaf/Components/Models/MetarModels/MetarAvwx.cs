@@ -181,6 +181,7 @@ namespace MetarTaf.Components.Models.MetarModels
 
             metar.Raw = this.Raw;
             metar.Time.Dt = this.Time.Dt;
+            metar.Station = this.Station;
 
             return metar;
         }

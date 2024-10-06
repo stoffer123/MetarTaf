@@ -104,6 +104,8 @@ namespace MetarTaf.Components.Models
 
         public async Task FetchMetarAsync()
         {
+
+
             try
             {
                 Console.WriteLine($"[{Icao}] Fetching METAR");
@@ -139,8 +141,8 @@ namespace MetarTaf.Components.Models
                 Console.WriteLine($"[{Icao}] {Error}");
                 AirportFactory.ReleaseAirport(Icao);
                 this.Dispose();
-                throw new ArgumentException($"[{Icao}] Is not valid!");
                 NotifyStateChanged();
+                throw new ArgumentException($"[{Icao}] Is not valid!");
             }
             catch (Exception ex)
             {

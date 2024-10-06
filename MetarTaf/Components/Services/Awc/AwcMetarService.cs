@@ -58,6 +58,7 @@ namespace MetarTaf.Components.Services.Awc
             {
                 metars = await getMetars();
             }
+            AirportFactory.ReleaseAirport(icao);
 
             // Filter the metars list to only include those that match the ICAO code
             List<Metar> matchingMetars = metars.Where(m => m.Station == icao).ToList();
