@@ -11,7 +11,7 @@ class Program
         try
         {
             // Initialize AirportFactory
-            var airportFactory = new AirportFactory();
+            var airportFactory = new AirportFactory(new InfoStation());
 
             // Create airports from JSON
             await airportFactory.createAirports();
@@ -57,6 +57,7 @@ class Program
                     Console.WriteLine($"No TAF Data found for {airport.icaoId}");
                 }
 
+                Console.WriteLine(airport.icaoId + airport.metars.ElementAt(0).ToString);
             }
             catch (KeyNotFoundException knf)
             {
@@ -68,6 +69,7 @@ class Program
         {
             Console.WriteLine($"Unexpected exception: {ex.Message}");
         }
+
 
         Console.ReadKey();
     }

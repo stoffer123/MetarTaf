@@ -12,7 +12,7 @@ namespace DecoderTesting
     {
         void addAirport(Airport airport);
         void removeAirport(Airport airport);
-        void notify();
+        Task notifyAsync();
         DecodedMetar getMetar(Airport airport);
         DecodedTaf getTaf(Airport airport);
 

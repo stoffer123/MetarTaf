@@ -24,6 +24,10 @@ namespace DecoderTesting
         public Dictionary<DateTime, DecodedMetar> metars { get; set; }
         public Dictionary<DateTime, DecodedTaf> tafs { get; set; }
 
+        // Public getter, private setter
+        public bool metarIsOld { get; private set; } = false;
+        public bool tafIsOld { get; private set; } = false;
+
         public Airport()
         {
             metars = new Dictionary<DateTime, DecodedMetar>();
@@ -43,6 +47,7 @@ namespace DecoderTesting
                     {
                         // Add to dictionary
                         metars.Add(newMetarDateTime, newMetar);
+                        metarIsOld = false;
                         Console.WriteLine($"Added METAR for {newMetarDateTime}: {newMetar.RawMetar}");
                     }
                     else
@@ -64,6 +69,7 @@ namespace DecoderTesting
                     {
                         // Add to dictionary
                         tafs.Add(newTafDateTime, newTaf);
+                        tafIsOld = false;
                         Console.WriteLine($"Added TAF for {newTafDateTime}: {newTaf.RawTaf}");
                     }
                     else
@@ -80,9 +86,17 @@ namespace DecoderTesting
             }
         }
 
+        public void markMetarAsOld()
+        {
+            metarIsOld = true;
+        }
 
+        public void markTafAsOld()
+        {
+            tafIsOld = true;
+        }
 
-        private DateTime parseDateTime(int date, string time)
+        public DateTime parseDateTime(int date, string time)
         {
             try
             {

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Metar.Decoder" Version="1.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
     <PackageReference Include="Taf.Decoder" Version="1.0.2" />
   </ItemGroup>
 

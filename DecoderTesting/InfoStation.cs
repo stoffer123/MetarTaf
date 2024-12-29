@@ -1,16 +1,19 @@
-﻿using System.IO.Compression;
+﻿using System.Collections.Concurrent;
+using System.IO.Compression;
 using Metar.Decoder;
 using Metar.Decoder.Entity;
 using Taf.Decoder;
 using Taf.Decoder.entity;
+using static Metar.Decoder.Entity.DecodedMetar;
+using static Taf.Decoder.entity.DecodedTaf;
 
 namespace DecoderTesting
 {
     public class InfoStation : IInfoStation
     {
-        List<Airport> airports = new List<Airport>();
-        Dictionary<Airport, DecodedMetar> metars = new Dictionary<Airport, DecodedMetar>();
-        Dictionary<Airport, DecodedTaf> tafs = new Dictionary<Airport, DecodedTaf>();
+        private List<Airport> airports = new List<Airport>();
+        private ConcurrentDictionary<string, DecodedMetar> metars = new ConcurrentDictionary<string, DecodedMetar>();
+        private ConcurrentDictionary<string, DecodedTaf> tafs = new ConcurrentDictionary<string, DecodedTaf>();
 
         private readonly string infoDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Info"); //Set info directiory
 
@@ -25,22 +28,49 @@ namespace DecoderTesting
             airports.Remove(airport);
         }
 
-        public void notify()
+        public async Task notifyAsync()
         {
+            var updateTasks = new List<Task>();
+
             foreach (Airport airport in airports)
             {
-                if (!airport.metars.ContainsKey(DateTime.UtcNow))
+                try
                 {
-                    airport.update();
+                    if (metars.TryGetValue(airport.icaoId, out var metar))
+                    {
+                        DateTime metarTime = airport.parseDateTime(metar.Day.Value, metar.Time);
+
+                        if (!airport.metars.ContainsKey(metarTime))
+                        {
+                            updateTasks.Add(Task.Run(() => airport.update()));
+                        }
+                    }else if(tafs.TryGetValue(airport.icaoId, out var taf))
+                    {
+                        DateTime tafTime = airport.parseDateTime(taf.Day.Value, taf.Time);
+                        if (!airport.tafs.ContainsKey(tafTime))
+                        {
+                            updateTasks.Add(Task.Run(() => airport.update()));
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No METAR or TAF data found for airport {airport.icaoId}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing airport {airport.icaoId}: {ex.Message}");
                 }
             }
+
+            await Task.WhenAll(updateTasks);
         }
 
         public DecodedMetar getMetar(Airport airport)
         {
-            if (metars.ContainsKey(airport))
+            if (metars.ContainsKey(airport.icaoId))
             {
-                return metars[airport];
+                return metars[airport.icaoId];
             }
 
             Console.WriteLine("METAR entry missing, preventing redundant fetch.");
@@ -54,13 +84,15 @@ namespace DecoderTesting
 
             await Task.WhenAll(metarTask, tafTask);
             Console.WriteLine("Both METAR and TAF reports have been loaded.");
+
+            await notifyAsync();
         }
 
         public DecodedTaf getTaf(Airport airport) 
         {
-            if (tafs.ContainsKey(airport))
+            if (tafs.ContainsKey(airport.icaoId))
             {
-                return tafs[airport];
+                return tafs[airport.icaoId];
             }
 
             Console.WriteLine("TAF entry missing, preventing redundant fetch.");
@@ -149,9 +181,8 @@ namespace DecoderTesting
                                 Console.WriteLine($"Matched airport: '{matchingAirport.icaoId}'");
 
                                 // Store the decoded METAR in the dictionary
-                                metars[matchingAirport] = metar;
-                                matchingAirport.update();
-                                Console.WriteLine($"Processed METAR for {matchingAirport.icaoId}: {rawMetar}");
+                                metars[matchingAirport.icaoId] = metar;
+                                Console.WriteLine($"Stored METAR for {matchingAirport.icaoId}: {rawMetar}");
                             }
                             else
                             {
@@ -257,9 +288,8 @@ namespace DecoderTesting
                                 Console.WriteLine($"Matched airport: '{matchingAirport.icaoId}'");
 
                                 // Store the decoded METAR in the dictionary
-                                tafs[matchingAirport] = taf;
-                                matchingAirport.update();
-                                Console.WriteLine($"Processed TAF for {matchingAirport.icaoId}: {rawTaf}");
+                                tafs[matchingAirport.icaoId] = taf;
+                                Console.WriteLine($"Stored TAF for {matchingAirport.icaoId}: {rawTaf}");
                             }
                             else
                             {

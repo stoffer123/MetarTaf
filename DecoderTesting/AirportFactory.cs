@@ -11,9 +11,9 @@ namespace DecoderTesting
         public IInfoStation infoStation;
         private readonly string infoDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Info"); //Set info directiory
 
-        public AirportFactory()
+        public AirportFactory(IInfoStation infoStation)
         {
-            this.infoStation = new InfoStation();
+            this.infoStation = infoStation;
         }
 
         //Return an airport from the dictionary
