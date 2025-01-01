@@ -21,7 +21,7 @@ namespace MetarTaf_Backend.Models
             this.name = name;
             this.wmo = wmo;
             this.longitude = longitude;
-            this.latitude = latitude;+
+            this.latitude = latitude;
 
             this.altitude = altitude;
         }
