@@ -1,7 +1,7 @@
 using MetarTaf.Components;
 using MetarTaf.Components.Factories;
 using MetarTaf.Components.Services.Avwx;
-using MetarTaf.Components.Services.Awc;
+using MetarTaf.Components.Services.Met;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,15 +12,15 @@ builder.Services.AddRazorComponents()
     .Services
     .AddSingleton(new HttpClient()) // Register HttpClient as a Singleton
                                     // Services - CHANGE HERE WHEN CHANGING API
-    .AddSingleton(sp => new AwcMetarService(sp.GetRequiredService<HttpClient>())) // MetarService
-    .AddSingleton(sp => new AwcTafService(sp.GetRequiredService<HttpClient>())) // TAFService
+    .AddSingleton(sp => new MetMetarService(sp.GetRequiredService<HttpClient>())) // MetarService
+    .AddSingleton(sp => new MetTafService(sp.GetRequiredService<HttpClient>())) // TAFService
     .AddSingleton(sp => new AvwxAirportInfoService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration))); // AirportInfoService
 
 var app = builder.Build();
 
 // Initialize AirportFactory with the required services
-var metarService = app.Services.GetRequiredService<AwcMetarService>();
-var tafService = app.Services.GetRequiredService<AwcTafService>();
+var metarService = app.Services.GetRequiredService<MetMetarService>();
+var tafService = app.Services.GetRequiredService<MetTafService>();
 var airportInfoService = app.Services.GetRequiredService<AvwxAirportInfoService>();
 AirportFactory.Initialize(metarService, tafService, airportInfoService);
 

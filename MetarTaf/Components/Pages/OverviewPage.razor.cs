@@ -1,8 +1,10 @@
+
 using MetarTaf.Components.Factories;
 using MetarTaf.Components.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text.Json;
+
 
 namespace MetarTaf.Components.Pages
 {
@@ -59,51 +61,33 @@ namespace MetarTaf.Components.Pages
                     return; // Exit the method if the airport is already in the list
                 }
 
-                var placeholderAirport = new Airport(
-                    icaoToAdd,
-                    null, // Provide the required MetarService instance
-                    null,   // Provide the required TAFService instance
-                    null// Provide the required AirportInfoService instance
-                );
-
-                airports.Add(placeholderAirport);
-                StateHasChanged();
 
                 try
                 {
                     var airport = AirportFactory.GetAirport(icaoToAdd);
-                    await airport.InitializeAsync();
-                    
+
                     // Check if the airport has valid data
-                    if (airport.Info != null && airport.Metars.Any() && airport.Tafs.Any())
+                    if (airport != null)
                     {
-                        // Replace the placeholder with the actual airport data
-                        var index = airports.IndexOf(placeholderAirport);
-                        if (index != -1)
-                        {
-                            airports[index] = airport;
-                        }
                         await SaveAirportsToLocalStorage();
-                        newAirportModel.Icao = string.Empty;
+                        airports.Add(airport);
                         StateHasChanged();
+
                     }
                     else
                     {
                         Console.WriteLine($"Invalid airport data for ICAO: {newAirportModel.Icao}");
-                        airports.Remove(placeholderAirport);
                         StateHasChanged();
                     }
                 }
-                catch (HttpRequestException httpEx)
+                catch (KeyNotFoundException ke)
                 {
-                    Console.WriteLine($"Error fetching data for ICAO {icaoToAdd}: {httpEx.Message}");
-                    airports.Remove(placeholderAirport);
+                    Console.WriteLine($"Error fetching data for ICAO {icaoToAdd}: {ke.Message}");
                     StateHasChanged();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Unexpected error for ICAO {icaoToAdd}: {ex.Message}");
-                    airports.Remove(placeholderAirport);
                     StateHasChanged();
                 }
             }
@@ -112,18 +96,12 @@ namespace MetarTaf.Components.Pages
         private async Task RemoveAirport(string icao)
         {
             airports.RemoveAll(a => a.Icao == icao);
-            AirportFactory.ReleaseAirport(icao);
             await SaveAirportsToLocalStorage();
             StateHasChanged();
         }
 
         private async Task ClearAllAirports()
         {
-            foreach (var airport in airports)
-            {
-                AirportFactory.ReleaseAirport(airport.Icao);
-            }
-
             airports.Clear(); // Clear the in-memory dictionary
             await SaveAirportsToLocalStorage(); // Update the local storage
             StateHasChanged(); // Notify the UI to re-render
@@ -153,7 +131,6 @@ namespace MetarTaf.Components.Pages
                     {
                         var airport = AirportFactory.GetAirport(icao);
                         airports.Add(airport);
-                        await airport.InitializeAsync();
                     }
                 }
             }
@@ -171,8 +148,8 @@ namespace MetarTaf.Components.Pages
 
         public void ConfirmReports(Airport airport)
         {
-            airport.MarkMetarAsOld();
-            airport.MarkTafAsOld();
+            airport.isNewMetar = false;
+            airport.isNewTaf = false;
             StateHasChanged();
         }
 
@@ -180,8 +157,8 @@ namespace MetarTaf.Components.Pages
         {
             foreach (var airport in airports)
             {
-                airport.MarkMetarAsOld();
-                airport.MarkTafAsOld();
+                airport.isNewMetar = false;
+                airport.isNewTaf = false;
             }
             lastAcknowledgeTime = DateTime.MinValue;
             StateHasChanged();
@@ -190,10 +167,6 @@ namespace MetarTaf.Components.Pages
         public void Dispose()
         {
             timer?.Dispose();
-            foreach (var airport in airports)
-            {
-                AirportFactory.ReleaseAirport(airport.Icao);
-            }
         }
     }
 }

@@ -4,7 +4,7 @@ using MetarTaf.Components.Models;
 using MetarTaf.Components.Services;
 using MetarTaf.Components.Services.Avwx;
 
-namespace MetarTaf.Components.Factories
+namespace MetarTaf_Backend
 {
     public static class AirportFactory
     {
