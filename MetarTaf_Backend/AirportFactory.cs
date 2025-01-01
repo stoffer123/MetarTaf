@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using MetarTaf.Components.Models;
-using MetarTaf.Components.Services;
-using MetarTaf.Components.Services.Avwx;
+﻿
+using MetarTaf_Backend.Models;
+using System.Runtime.CompilerServices;
 
 namespace MetarTaf_Backend
 {
@@ -10,16 +8,7 @@ namespace MetarTaf_Backend
     {
         private static readonly object lockObject = new object();
         public static readonly Dictionary<string, Airport> airports = new Dictionary<string, Airport>();
-        private static IMetarService metarService;
-        private static ITafService tafService;
-        private static IAirportInfoService airportInfoService;
-
-        public static void Initialize(IMetarService metarSvc, ITafService tafSvc, IAirportInfoService airportInfoSvc)
-        {
-            metarService = metarSvc;
-            tafService = tafSvc;
-            airportInfoService = airportInfoSvc;
-        }
+        private IInfoStation infoStation;
 
         public static Airport GetAirport(string icao)
         {
@@ -27,7 +16,7 @@ namespace MetarTaf_Backend
             {
                 if (!airports.ContainsKey(icao))
                 {
-                    var airport = new Airport(icao, metarService, tafService, airportInfoService);
+                    var airport = new Airport(infoStation);
                     airport.IncrementReferenceCount();
                     airports[icao] = airport;
                     Console.WriteLine("[AirportFactory] Created new airport: " + icao);

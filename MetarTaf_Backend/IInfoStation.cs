@@ -9,8 +9,8 @@ namespace MetarTaf_Backend
 {
     interface IInfoStation
     {
-        AirportInfo GetAirportInfo();
+        AirportInfo GetAirportInfo(string icao);
         Dictionary<DateTime, WrappedMetar> getMetars(string icao);
-        Dictionary<DateTime, WrappedTaf> getTaf(string icao);
+        Dictionary<DateTime, WrappedTaf> getTafs(string icao);
     }
 }
