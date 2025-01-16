@@ -19,7 +19,7 @@ namespace MetarTaf_Backend.Models
             this.infoStation = infoStation;
             this.airportInfo = infoStation.GetAirportInfo();
             this.metars = new Dictionary<DateTime, WrappedMetar>();
-            this.tafs = new Dictionary<DateTime, WrappedTaf>()
+            this.tafs = new Dictionary<DateTime, WrappedTaf>();
         }
     }
 }
