@@ -10,16 +10,44 @@ namespace MetarTaf_Backend.Models
     {
         IInfoStation infoStation;
 
-        AirportInfo airportInfo;
-        Dictionary<DateTime, WrappedMetar> metars;
-        Dictionary<DateTime, WrappedTaf> tafs;
+        private AirportInfo airportInfo;
+        public string icao { get; }
+        private Dictionary<DateTime, WrappedMetar> metars;
+        private Dictionary<DateTime, WrappedTaf> tafs;
+        int referenceCount;
 
-        public Airport(IInfoStation infoStation)
+        public Airport(IInfoStation infoStation, string icao)
         {
             this.infoStation = infoStation;
-            this.airportInfo = infoStation.GetAirportInfo();
+            this.icao = icao;
+            this.airportInfo = infoStation.GetAirportInfo(this.icao);
             this.metars = new Dictionary<DateTime, WrappedMetar>();
             this.tafs = new Dictionary<DateTime, WrappedTaf>();
+<<<<<<< HEAD
+=======
+            int referenceCount = 0;
+        }
+
+        public void IncrementReferenceCount()
+        {
+            referenceCount++;
+        }
+
+        public void DecrementReferenceCount()
+        {
+            referenceCount--;
+        }
+
+        internal bool IsInUse()
+        {
+            if(referenceCount <= 0) return false;
+            else return true;
+        }
+
+        internal void Dispose()
+        {
+            throw new NotImplementedException();
+>>>>>>> 904ef91de790c1d74e98f95ca151a6b70b34919a
         }
     }
 }
