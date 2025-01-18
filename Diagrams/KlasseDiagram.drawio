@@ -53,7 +53,7 @@
           <mxGeometry y="242" width="340" height="30" as="geometry" />
         </mxCell>
         <mxCell id="nt1VjJ4SlgOIhSV19vYH-16" value="IInfoStation" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-170" y="160" width="310" height="246" as="geometry" />
+          <mxGeometry x="-170" y="160" width="310" height="168" as="geometry" />
         </mxCell>
         <mxCell id="nt1VjJ4SlgOIhSV19vYH-18" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="nt1VjJ4SlgOIhSV19vYH-16" vertex="1">
           <mxGeometry y="30" width="310" height="8" as="geometry" />
@@ -72,15 +72,6 @@
         </mxCell>
         <mxCell id="nt1VjJ4SlgOIhSV19vYH-22" value="+ notifyAirportInfoChange()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="nt1VjJ4SlgOIhSV19vYH-16" vertex="1">
           <mxGeometry y="142" width="310" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="nt1VjJ4SlgOIhSV19vYH-21" value="- fetchMetars()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="nt1VjJ4SlgOIhSV19vYH-16" vertex="1">
-          <mxGeometry y="168" width="310" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="qlbexOnmbUlDjEJJncOh-5" value="- fetchTafs()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="nt1VjJ4SlgOIhSV19vYH-16" vertex="1">
-          <mxGeometry y="194" width="310" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="qlbexOnmbUlDjEJJncOh-4" value="- fetchAirportInfo()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="nt1VjJ4SlgOIhSV19vYH-16" vertex="1">
-          <mxGeometry y="220" width="310" height="26" as="geometry" />
         </mxCell>
         <mxCell id="nt1VjJ4SlgOIhSV19vYH-26" value="IAirport" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="440" y="180" width="310" height="116" as="geometry" />
@@ -215,7 +206,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="qlbexOnmbUlDjEJJncOh-26" value="MetarService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-1620" y="240" width="330" height="164" as="geometry">
+          <mxGeometry x="-1630" y="240" width="330" height="164" as="geometry">
             <mxRectangle x="-170" y="590" width="200" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
