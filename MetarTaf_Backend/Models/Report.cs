@@ -17,17 +17,14 @@ namespace MetarTaf_Backend.Models
             string format = "ddHH:mm 'UTC'";
             CultureInfo culture = CultureInfo.InvariantCulture;
 
-            if (DateTime.TryParseExact(dateTimeString, format, culture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedDateTime))
-            {
-                Console.WriteLine($"Parsed DateTime: {parsedDateTime} (UTC)");
-            }
-            else
+            if (!DateTime.TryParseExact(dateTimeString, format, culture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedDateTime))
             {
                 Console.WriteLine("Failed to parse the date time string. returning time UtcNow");
             }
 
-            
-            return parsedDateTime != null ? parsedDateTime : DateTime.UtcNow;
+
+
+            return parsedDateTime;
         }
     }
 }

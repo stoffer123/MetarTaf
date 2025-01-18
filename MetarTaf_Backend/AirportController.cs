@@ -11,13 +11,19 @@ namespace MetarTaf_Backend
     {
         private static Dictionary<string, IAirport> airports = new();
 
-
+        
 
         public static List<string> getAirportIcaoList()
         {
-            List<string> strings = airports.Keys.ToList();
+            //List<string> strings = airports.Keys.ToList();
 
+            //Test list
+            List<string> strings = new List<string>();
+            strings.Add("EKCH");
+            strings.Add("EKEB");
             return strings;
         }
+
+
     }
 }

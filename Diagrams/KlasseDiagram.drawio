@@ -215,7 +215,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="qlbexOnmbUlDjEJJncOh-26" value="MetarService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-1620" y="240" width="330" height="138" as="geometry">
+          <mxGeometry x="-1620" y="240" width="330" height="164" as="geometry">
             <mxRectangle x="-170" y="590" width="200" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
@@ -225,14 +225,17 @@
         <mxCell id="qlbexOnmbUlDjEJJncOh-28" value="+ url : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="qlbexOnmbUlDjEJJncOh-26" vertex="1">
           <mxGeometry y="52" width="330" height="26" as="geometry" />
         </mxCell>
+        <mxCell id="Dp-YWuqq8nAydh4Eh8QY-2" value="- metarFactory : MetarFactory" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="qlbexOnmbUlDjEJJncOh-26">
+          <mxGeometry y="78" width="330" height="26" as="geometry" />
+        </mxCell>
         <mxCell id="qlbexOnmbUlDjEJJncOh-30" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="qlbexOnmbUlDjEJJncOh-26" vertex="1">
-          <mxGeometry y="78" width="330" height="8" as="geometry" />
+          <mxGeometry y="104" width="330" height="8" as="geometry" />
         </mxCell>
         <mxCell id="qlbexOnmbUlDjEJJncOh-31" value="- fetchMetars()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="qlbexOnmbUlDjEJJncOh-26" vertex="1">
-          <mxGeometry y="86" width="330" height="26" as="geometry" />
+          <mxGeometry y="112" width="330" height="26" as="geometry" />
         </mxCell>
         <mxCell id="qlbexOnmbUlDjEJJncOh-32" value="+ getMetars : Dict&amp;lt;DateTime, MetarReport&amp;gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="qlbexOnmbUlDjEJJncOh-26" vertex="1">
-          <mxGeometry y="112" width="330" height="26" as="geometry" />
+          <mxGeometry y="138" width="330" height="26" as="geometry" />
         </mxCell>
         <mxCell id="-4nW8VzDrBvMN3F4ZCzb-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="-4nW8VzDrBvMN3F4ZCzb-1" target="nt1VjJ4SlgOIhSV19vYH-101" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -288,7 +291,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="-4nW8VzDrBvMN3F4ZCzb-13" value="TafService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-1620" width="310" height="138" as="geometry">
+          <mxGeometry x="-1620" width="310" height="190" as="geometry">
             <mxRectangle x="-170" y="590" width="200" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
@@ -298,14 +301,20 @@
         <mxCell id="-4nW8VzDrBvMN3F4ZCzb-15" value="+ url : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="-4nW8VzDrBvMN3F4ZCzb-13" vertex="1">
           <mxGeometry y="52" width="310" height="26" as="geometry" />
         </mxCell>
+        <mxCell id="Dp-YWuqq8nAydh4Eh8QY-4" value="- tafFactory : TafFactory" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="-4nW8VzDrBvMN3F4ZCzb-13">
+          <mxGeometry y="78" width="310" height="26" as="geometry" />
+        </mxCell>
         <mxCell id="-4nW8VzDrBvMN3F4ZCzb-16" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="-4nW8VzDrBvMN3F4ZCzb-13" vertex="1">
-          <mxGeometry y="78" width="310" height="8" as="geometry" />
+          <mxGeometry y="104" width="310" height="8" as="geometry" />
         </mxCell>
         <mxCell id="-4nW8VzDrBvMN3F4ZCzb-17" value="- fetchTafs()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="-4nW8VzDrBvMN3F4ZCzb-13" vertex="1">
-          <mxGeometry y="86" width="310" height="26" as="geometry" />
+          <mxGeometry y="112" width="310" height="26" as="geometry" />
         </mxCell>
         <mxCell id="-4nW8VzDrBvMN3F4ZCzb-18" value="+ getTafs(string) : Dict&amp;lt;DateTime, TafReport&amp;gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="-4nW8VzDrBvMN3F4ZCzb-13" vertex="1">
-          <mxGeometry y="112" width="310" height="26" as="geometry" />
+          <mxGeometry y="138" width="310" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="Dp-YWuqq8nAydh4Eh8QY-3" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="-4nW8VzDrBvMN3F4ZCzb-13">
+          <mxGeometry y="164" width="310" height="26" as="geometry" />
         </mxCell>
         <mxCell id="-4nW8VzDrBvMN3F4ZCzb-25" value="MetarFactory : IReportFactory" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="-2040" y="-290" width="310" height="86" as="geometry">

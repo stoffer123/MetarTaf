@@ -9,7 +9,7 @@ namespace MetarTaf_Backend.Models
 {
     internal class TafReport : Report
     {
-        DecodedTaf decodedTaf { get; set; }
+        public DecodedTaf decodedTaf { get; set; }
         public TafReport(DecodedTaf decodedTaf)
         {
             this.decodedTaf = decodedTaf;
