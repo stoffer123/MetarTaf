@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Services
 {
     internal class AirportInfoService
     {
+        private readonly string infoDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Info"); //Set info directiory
 
 
-        public void createAirportInfo()
+        public async Task createAirportInfo()
         {
             // Define the URL and file paths
             string jsonUrl = "https://aviationweather.gov/data/cache/stations.cache.json.gz"; // Replace with the actual URL
@@ -58,6 +60,8 @@ namespace MetarTaf_Backend.Services
 
             // Read the JSON content from the extracted file
             string fileContent = File.ReadAllText(jsonFilePath);
+
+            
         }
     }
 }
