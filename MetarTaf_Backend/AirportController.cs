@@ -1,4 +1,5 @@
-﻿using MetarTaf_Backend.Models;
+﻿using MetarTaf_Backend.Factories;
+using MetarTaf_Backend.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,20 +8,59 @@ using System.Threading.Tasks;
 
 namespace MetarTaf_Backend
 {
-    public static class AirportController
+    public class AirportController
     {
-        private static Dictionary<string, IAirport> airports = new();
-
+        private Dictionary<string, IAirport> airports = new();
+        private IInfoStation infoStation;
+        private AirportFactory airportFactory;
         
 
-        public static List<string> getAirportIcaoList()
+        public AirportController()
         {
-            //List<string> strings = airports.Keys.ToList();
+            infoStation = new AirportInfoStation(this);
+            airportFactory = new AirportFactory(infoStation);
+        }
 
-            //Test list
-            List<string> strings = new List<string>();
-            strings.Add("EKCH");
-            strings.Add("EKEB");
+        public IAirport getAirport(string icao)
+        {
+            IAirport airport = null;
+            if(airports.TryGetValue(icao, out airport))
+            {
+                airport.incrementReferenceCount();
+            }
+            else
+            {
+                airport = airportFactory.createAirport(icao);
+            }
+
+            return airport;
+        }
+
+        public void releaseAirport(string icao)
+        {
+            IAirport airport = null;
+
+            if(airports.TryGetValue(icao,out airport))
+            {
+                airport.decrementReferenceCount();
+
+                if(airport.getReferenceCount() < 1)
+                {
+                    airports.Remove(icao);
+                }
+            }
+
+        }
+        
+
+        public List<string> getAirportIcaoList()
+        {
+            List<string> strings = airports.Keys.ToList();
+
+            ////Test list
+            //List<string> strings = new List<string>();
+            //strings.Add("EKCH");
+            //strings.Add("EKEB");
             return strings;
         }
 

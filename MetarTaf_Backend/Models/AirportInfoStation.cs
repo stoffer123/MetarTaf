@@ -9,13 +9,14 @@ namespace MetarTaf_Backend.Models
 {
     internal class AirportInfoStation : IInfoStation
     {
-        List<IAirport> observers;
-        MetarService metarService;
+        private List<IAirport> observers;
+        private MetarService metarService;
+        private AirportController airportController;
         
-        public AirportInfoStation()
+        public AirportInfoStation(AirportController airportController)
         {
             observers = new List<IAirport>();
-            metarService = new(this);
+            metarService = new(this, airportController);
         }
 
         public void addObserver(IAirport observer)

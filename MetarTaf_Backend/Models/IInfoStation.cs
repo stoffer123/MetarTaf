@@ -13,5 +13,6 @@ namespace MetarTaf_Backend.Models
         void notifyTafChange();
         void notifyMetarChange();
         void notifyAirportInfoChange();
+        Dictionary<DateTime, MetarReport> getMetars(string icao);
     }
 }

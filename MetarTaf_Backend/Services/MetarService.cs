@@ -16,16 +16,18 @@ namespace MetarTaf_Backend.Services
         private string apiUrl = "https://api.met.no/weatherapi/tafmetar/1.0/metar?extended=true&icao=";
         private MetarFactory metarFactory = new();
         private IInfoStation infoStation;
+        private AirportController airportController;
 
-        public MetarService(IInfoStation infostation)
+        public MetarService(IInfoStation infostation, AirportController airportController)
         {
             this.infoStation = infostation;
+            this.airportController = airportController;
         }
 
 
         public async Task fetchMetars()
         {
-            string[] icaoList = AirportController.getAirportIcaoList().ToArray();
+            string[] icaoList = airportController.getAirportIcaoList().ToArray();
             string icaoString = string.Empty;
 
             //Build icaoString for the request URL

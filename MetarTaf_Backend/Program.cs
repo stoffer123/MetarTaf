@@ -10,9 +10,8 @@ using Taf.Decoder;
 using Taf.Decoder.entity;
 
 
-MetarService metarService = new MetarService();
 
-await metarService.fetchMetars();
+
 
 //Dictionary<DateTime, MetarReport> ekebMetars = metarService.getMetars("EKEB");
 
@@ -21,10 +20,5 @@ await metarService.fetchMetars();
 
 //    Console.WriteLine($"{kvp.Value.reportTime} --- {kvp.Value.decodedMetar.RawMetar}");
 //}
-
-metarService.printIcaoList();
-
-
-
 
 Console.ReadKey();

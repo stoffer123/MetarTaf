@@ -6,10 +6,15 @@ using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Models
 {
-    internal interface IAirport
+    public interface IAirport
     {
         void updateMetars();
         void updateTafs();
         void updateAirportInfo();
+
+        void incrementReferenceCount();
+        void decrementReferenceCount();
+        int getReferenceCount();
+
     }
 }

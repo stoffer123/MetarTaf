@@ -1,19 +1,38 @@
-﻿using System;
+﻿using MetarTaf_Backend.Models;
+using System;
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Services
 {
-    internal class AirportInfoService
+    internal static class AirportInfoService
     {
-        private readonly string infoDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Info"); //Set info directiory
+        private static readonly string infoDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Info"); //Set info directiory
+        private static Dictionary<string, AirportInfo> airportInfos = new();
 
+        
 
-        public async Task createAirportInfo()
+        public static AirportInfo getAirportInfo(string icao)
+        {
+            AirportInfo airportInfo = null;
+
+            if (airportInfos.TryGetValue(icao, out airportInfo))
+            {
+                Console.WriteLine("Successfully found " + icao);
+            }
+            else
+            {
+                Console.WriteLine("Couldnt find: " + icao);
+            }
+            return airportInfo;
+        }
+
+        public static async Task createAirportInfo()
         {
             // Define the URL and file paths
             string jsonUrl = "https://aviationweather.gov/data/cache/stations.cache.json.gz"; // Replace with the actual URL
@@ -61,7 +80,35 @@ namespace MetarTaf_Backend.Services
             // Read the JSON content from the extracted file
             string fileContent = File.ReadAllText(jsonFilePath);
 
-            
+            List<AirportInfo> tempList = DeserializeAirports(fileContent);
+
+            foreach (AirportInfo temp in tempList)
+            {
+                if(temp.icaoId != null)
+                {
+                    airportInfos.TryAdd(temp.icaoId, temp);
+                }
+            }
+
+
+        }
+
+        private static List<AirportInfo> DeserializeAirports(string jsonContent)
+        {
+            try
+            {
+                var airportInfoList = JsonSerializer.Deserialize<List<AirportInfo>>(jsonContent);
+                if (airportInfoList == null)
+                {
+                    throw new Exception("Failed to deserialize airport info");
+                }
+                return airportInfoList;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deserializing JSON: {ex.Message}");
+                return new List<AirportInfo>();
+            }
         }
     }
 }
