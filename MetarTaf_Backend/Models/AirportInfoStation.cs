@@ -10,15 +10,21 @@ namespace MetarTaf_Backend.Models
     internal class AirportInfoStation : IInfoStation
     {
         List<IAirport> observers;
-        MetarService metarService = new();
+        MetarService metarService;
         
+        public AirportInfoStation()
+        {
+            observers = new List<IAirport>();
+            metarService = new(this);
+        }
+
         public void addObserver(IAirport observer)
         {
             observers.Add(observer);
         }
         public void removeObserver(IAirport observer)
         {
-            observers.RemoveAll(observer);
+            observers.Remove(observer);
         }
 
         public void notifyAirportInfoChange()
@@ -31,12 +37,25 @@ namespace MetarTaf_Backend.Models
 
         public void notifyMetarChange()
         {
-            throw new NotImplementedException();
+            foreach (IAirport observer in observers)
+            {
+                observer.updateMetars();
+            }
         }
 
         public void notifyTafChange()
         {
-            throw new NotImplementedException();
+            foreach (IAirport observer in observers)
+            {
+                observer.updateTafs();
+            }
+        }
+
+        public Dictionary<DateTime, MetarReport> getMetars(string icao)
+        {
+            Dictionary<DateTime, MetarReport> metars = metarService.getMetars(icao);
+
+            return metars;
         }
 
     }

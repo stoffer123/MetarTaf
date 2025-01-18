@@ -15,6 +15,12 @@ namespace MetarTaf_Backend.Services
         private Dictionary<string, Dictionary<DateTime, MetarReport>> metars = new();
         private string apiUrl = "https://api.met.no/weatherapi/tafmetar/1.0/metar?extended=true&icao=";
         private MetarFactory metarFactory = new();
+        private IInfoStation infoStation;
+
+        public MetarService(IInfoStation infostation)
+        {
+            this.infoStation = infostation;
+        }
 
 
         public async Task fetchMetars()
