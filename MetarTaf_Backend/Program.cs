@@ -9,16 +9,18 @@ using System.Text;
 using Taf.Decoder;
 using Taf.Decoder.entity;
 
+await AirportInfoService.createAirportInfo();
 
+AirportController airportController = new AirportController();
 
+airportController.getAirport("EKEB");
+airportController.getAirport("EKCH");
 
+string[] strings = airportController.getAirportIcaoList().ToArray();
+foreach (string s in strings)
+{
+    Console.WriteLine(s);
+}
 
-//Dictionary<DateTime, MetarReport> ekebMetars = metarService.getMetars("EKEB");
-
-//foreach (KeyValuePair<DateTime, MetarReport> kvp in ekebMetars)
-//{
-
-//    Console.WriteLine($"{kvp.Value.reportTime} --- {kvp.Value.decodedMetar.RawMetar}");
-//}
 
 Console.ReadKey();

@@ -20,5 +20,8 @@ namespace MetarTaf_Backend.Models
         public string country { get; set; }
         public int priority { get; set; }
 
+
+
+
     }
 }

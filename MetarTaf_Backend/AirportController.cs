@@ -13,40 +13,47 @@ namespace MetarTaf_Backend
         private Dictionary<string, IAirport> airports = new();
         private IInfoStation infoStation;
         private AirportFactory airportFactory;
-        
+        private readonly object lockObject;
+
 
         public AirportController()
         {
             infoStation = new AirportInfoStation(this);
             airportFactory = new AirportFactory(infoStation);
+            lockObject = new object();
         }
 
         public IAirport getAirport(string icao)
         {
-            IAirport airport = null;
-            if(airports.TryGetValue(icao, out airport))
+            lock (lockObject)
             {
-                airport.incrementReferenceCount();
-            }
-            else
-            {
-                airport = airportFactory.createAirport(icao);
-            }
-
+                IAirport airport = null;
+                if (airports.TryGetValue(icao, out airport))
+                {
+                    airport.incrementReferenceCount();
+                }
+                else
+                {
+                    airport = airportFactory.createAirport(icao);
+                }
             return airport;
+            }
         }
 
         public void releaseAirport(string icao)
         {
-            IAirport airport = null;
-
-            if(airports.TryGetValue(icao,out airport))
+            lock (lockObject)
             {
-                airport.decrementReferenceCount();
+                IAirport airport = null;
 
-                if(airport.getReferenceCount() < 1)
+                if (airports.TryGetValue(icao, out airport))
                 {
-                    airports.Remove(icao);
+                    airport.decrementReferenceCount();
+
+                    if (airport.getReferenceCount() < 1)
+                    {
+                        airports.Remove(icao);
+                    }
                 }
             }
 

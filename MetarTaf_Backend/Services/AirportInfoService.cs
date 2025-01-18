@@ -86,7 +86,12 @@ namespace MetarTaf_Backend.Services
             {
                 if(temp.icaoId != null)
                 {
-                    airportInfos.TryAdd(temp.icaoId, temp);
+                    
+                    if(airportInfos.TryAdd(temp.icaoId, temp))
+                    {
+                        Console.WriteLine($"Successfully added {temp.icaoId} to airportInfos");
+
+                    }
                 }
             }
 
