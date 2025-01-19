@@ -7,7 +7,7 @@ using Taf.Decoder.entity;
 
 namespace MetarTaf_Backend.Models
 {
-    internal class TafReport : Report
+    public class TafReport : Report
     {
         public DecodedTaf decodedTaf { get; set; }
         public TafReport(DecodedTaf decodedTaf)

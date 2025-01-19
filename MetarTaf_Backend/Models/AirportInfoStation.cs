@@ -11,17 +11,21 @@ namespace MetarTaf_Backend.Models
     {
         private List<IAirport> observers;
         private MetarService metarService;
+        private TafService tafService;
         private AirportController airportController;
         
         public AirportInfoStation(AirportController airportController)
         {
+            this.airportController = airportController;
             observers = new List<IAirport>();
             metarService = new(this, airportController);
+            tafService = new(this, airportController);
         }
 
         public void addObserver(IAirport observer)
         {
             observers.Add(observer);
+            fetchNewReportsFromAPI();
         }
         public void removeObserver(IAirport observer)
         {
@@ -57,6 +61,22 @@ namespace MetarTaf_Backend.Models
             Dictionary<DateTime, MetarReport> metars = metarService.getMetars(icao);
 
             return metars;
+        }
+
+        public Dictionary<DateTime, TafReport> getTafs(string icao)
+        {
+            Dictionary<DateTime, TafReport> tafs = tafService.getTafs(icao);
+
+            return tafs;
+        }
+
+        public async Task fetchNewReportsFromAPI()
+        {
+            await metarService.fetchMetars();
+            await tafService.fetchTafs();
+            airportController.ResetFetchTimerAfterFetch();
+
+
         }
 
     }

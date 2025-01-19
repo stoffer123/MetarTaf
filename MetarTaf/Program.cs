@@ -1,28 +1,22 @@
 using MetarTaf.Components;
-using MetarTaf.Components.Factories;
-using MetarTaf.Components.Services.Avwx;
-using MetarTaf.Components.Services.Met;
+using MetarTaf_Backend;
+using MetarTaf_Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+await AirportInfoService.createAirportInfo();
+
+
+builder.Services.AddSingleton<AirportController>();
 
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
-    .Services
-    .AddSingleton(new HttpClient()) // Register HttpClient as a Singleton
-                                    // Services - CHANGE HERE WHEN CHANGING API
-    .AddSingleton(sp => new MetMetarService(sp.GetRequiredService<HttpClient>())) // MetarService
-    .AddSingleton(sp => new MetTafService(sp.GetRequiredService<HttpClient>())) // TAFService
-    .AddSingleton(sp => new AvwxAirportInfoService(sp.GetRequiredService<HttpClient>(), GetApiKey(builder.Configuration))); // AirportInfoService
+    .AddInteractiveServerComponents(); ;
 
 var app = builder.Build();
 
-// Initialize AirportFactory with the required services
-var metarService = app.Services.GetRequiredService<MetMetarService>();
-var tafService = app.Services.GetRequiredService<MetTafService>();
-var airportInfoService = app.Services.GetRequiredService<AvwxAirportInfoService>();
-AirportFactory.Initialize(metarService, tafService, airportInfoService);
+await AirportInfoService.createAirportInfo();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -40,21 +34,3 @@ app.MapRazorComponents<App>()
 
 app.Run();
 
-static string GetApiKey(IConfiguration configuration)
-{
-    // Try to get the API key from environment variables first
-    var apiKey = Environment.GetEnvironmentVariable("API_KEY");
-
-    // If not found, fall back to the configuration file
-    if (string.IsNullOrEmpty(apiKey))
-    {
-        apiKey = configuration["ApiSettings:ApiKey"];
-    }
-
-    if (string.IsNullOrEmpty(apiKey))
-    {
-        throw new InvalidOperationException("API key is not set.");
-    }
-
-    return apiKey;
-}

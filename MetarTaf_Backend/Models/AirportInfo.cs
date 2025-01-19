@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Models
 {
-    internal class AirportInfo
+    public class AirportInfo
     {
         public string icaoId { get; set; }
         public string iataId { get; set; }

@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetarTaf", "MetarTaf\MetarTaf.csproj", "{12722B1B-4378-46E3-BDDC-0DD615F2B60E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{173606EE-523C-4B45-AB4E-EAF63FA9DE01} = {173606EE-523C-4B45-AB4E-EAF63FA9DE01}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetarTaf.Tests", "MetarTaf.Tests\MetarTaf.Tests.csproj", "{4E5F3CFE-C356-4928-8B59-DCF57A323FF2}"
 EndProject

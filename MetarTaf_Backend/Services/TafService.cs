@@ -10,22 +10,22 @@ using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Services
 {
-    internal class MetarService
+    internal class TafService
     {
-        private Dictionary<string, Dictionary<DateTime, MetarReport>> metars = new();
-        private string apiUrl = "https://api.met.no/weatherapi/tafmetar/1.0/metar?extended=true&icao=";
-        private MetarFactory metarFactory = new();
+        private Dictionary<string, Dictionary<DateTime, TafReport>> tafs = new();
+        private string apiUrl = "https://api.met.no/weatherapi/tafmetar/1.0/taf?extended=true&icao=";
+        private TafFactory tafFactory = new();
         private IInfoStation infoStation;
         private AirportController airportController;
 
-        public MetarService(IInfoStation infostation, AirportController airportController)
+        public TafService(IInfoStation infostation, AirportController airportController)
         {
             this.infoStation = infostation;
             this.airportController = airportController;
         }
 
 
-        public async Task fetchMetars()
+        public async Task fetchTafs()
         {
             string[] icaoList = airportController.getAirportIcaoList().ToArray();
             string icaoString = string.Empty;
@@ -34,7 +34,7 @@ namespace MetarTaf_Backend.Services
             for (int i = 0; i < icaoList.Length; i++)
             {
                 icaoString += icaoList[i];
-                if(i != icaoList.Length - 1)
+                if (i != icaoList.Length - 1)
                 {
                     icaoString += ",";
                 }
@@ -73,24 +73,24 @@ namespace MetarTaf_Backend.Services
                                 string processedLine = line.Replace("AUTO ", "");
 
                                 // Create a MetarReport object
-                                string metarLine = "METAR " + processedLine;
+                                string tafLine = "TAF " + processedLine;
 
-                                MetarReport metar = metarFactory.createMetar(metarLine); //"METAR" prefix is needed
-                                string icao = metar.decodedMetar.ICAO;
-                                DateTime reportTime = metar.reportTime;
+                                TafReport taf = tafFactory.createTaf(tafLine); //"METAR" prefix is needed
+                                string icao = taf.decodedTaf.Icao;
+                                DateTime reportTime = taf.reportTime;
 
                                 // Check if the ICAO key exists in the dictionary
-                                if (!metars.ContainsKey(icao))
+                                if (!tafs.ContainsKey(icao))
                                 {
                                     // Add a new entry for the airport
-                                    metars[icao] = new Dictionary<DateTime, MetarReport>();
+                                    tafs[icao] = new Dictionary<DateTime, TafReport>();
                                 }
 
                                 // Check if the reportTime key exists for the airport
-                                if (!metars[icao].ContainsKey(reportTime))
+                                if (!tafs[icao].ContainsKey(reportTime))
                                 {
                                     // Add the MetarReport for the specific report time
-                                    metars[icao][reportTime] = metar;
+                                    tafs[icao][reportTime] = taf;
                                 }
                             }
                             catch (Exception ex)
@@ -110,29 +110,29 @@ namespace MetarTaf_Backend.Services
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
 
-            infoStation.notifyMetarChange();
+            infoStation.notifyTafChange();
         }
 
-        public Dictionary<DateTime, MetarReport> getMetars(string icao)
+        public Dictionary<DateTime, TafReport> getTafs(string icao)
         {
-            Dictionary<DateTime, MetarReport> metarList;
-            if(metars.TryGetValue(icao, out metarList))
+            Dictionary<DateTime, TafReport> tafList;
+            if (tafs.TryGetValue(icao, out tafList))
             {
                 Console.WriteLine($"Successfully found {icao} in dict of metars");
             }
             else
             {
                 Console.WriteLine($"Failed to find {icao} in dict of metars, returning empty dict");
-                metarList = new Dictionary<DateTime, MetarReport>();
+                tafList = new Dictionary<DateTime, TafReport>();
             }
 
-            return metarList;
+            return tafList;
         }
 
         //For testing
         public void printIcaoList()
         {
-            foreach(KeyValuePair<string, Dictionary<DateTime, MetarReport>> kvp in metars)
+            foreach (KeyValuePair<string, Dictionary<DateTime, TafReport>> kvp in tafs)
             {
                 Console.WriteLine(kvp.Key);
             }

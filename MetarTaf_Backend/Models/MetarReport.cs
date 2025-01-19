@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Models
 {
-    internal class MetarReport : Report
+    public class MetarReport : Report
     {
         public DecodedMetar decodedMetar { get; set; }
 

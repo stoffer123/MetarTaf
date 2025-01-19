@@ -13,7 +13,7 @@ namespace MetarTaf_Backend.Factories
     {
         public TafFactory() { }
 
-        public TafReport createTafReport(string tafString)
+        public TafReport createTaf(string tafString)
         {
             DecodedTaf decodedTaf = TafDecoder.ParseWithMode(tafString);
 

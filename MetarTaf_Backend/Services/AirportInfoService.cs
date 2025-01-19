@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Services
 {
-    internal static class AirportInfoService
+    public static class AirportInfoService
     {
         private static readonly string infoDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Info"); //Set info directiory
         private static Dictionary<string, AirportInfo> airportInfos = new();

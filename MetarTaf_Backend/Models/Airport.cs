@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,7 @@ namespace MetarTaf_Backend.Models
             tafIsNew = false;
 
             updateMetars();
+            updateTafs();
             
         }
 
@@ -56,7 +58,17 @@ namespace MetarTaf_Backend.Models
 
         public void updateTafs()
         {
-            throw new NotImplementedException();
+            Dictionary<DateTime, TafReport> newTafs = infoStation.getTafs(icao);
+
+            foreach (KeyValuePair<DateTime, TafReport> kvp in newTafs)
+            {
+                TafReport newTaf = kvp.Value;
+
+                if (tafs.TryAdd(kvp.Key, newTaf))
+                {
+                    tafIsNew = true;
+                }
+            }
         }
 
         public void incrementReferenceCount()
@@ -72,6 +84,41 @@ namespace MetarTaf_Backend.Models
         public int getReferenceCount()
         {
             return referenceCount;
+        }
+
+        public AirportInfo getAirportInfo()
+        {
+            return airportInfo;
+        }
+
+        public Dictionary<DateTime, MetarReport> getMetars()
+        {
+            return metars;
+        }
+
+        public Dictionary<DateTime, TafReport> getTafs()
+        {
+            return tafs;
+        }
+
+        public void setMetarIsNew(bool isNew)
+        {
+            metarIsNew = isNew;
+        }
+
+        public void setTafIsNew(bool isNew)
+        {
+            tafIsNew = isNew;
+        }
+
+        public bool getIsNewMetar()
+        {
+            return metarIsNew;
+        }
+
+        public bool getIsNewTaf()
+        {
+            return tafIsNew;
         }
     }
 }
