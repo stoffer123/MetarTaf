@@ -1,0 +1,83 @@
+﻿using MetarTaf_Backend.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MetarTaf_Backend.Models
+{
+    internal class AirportInfoStation : IInfoStation
+    {
+        private List<IAirport> observers;
+        private MetarService metarService;
+        private TafService tafService;
+        private AirportController airportController;
+        
+        public AirportInfoStation(AirportController airportController)
+        {
+            this.airportController = airportController;
+            observers = new List<IAirport>();
+            metarService = new(this, airportController);
+            tafService = new(this, airportController);
+        }
+
+        public void addObserver(IAirport observer)
+        {
+            observers.Add(observer);
+            fetchNewReportsFromAPI();
+        }
+        public void removeObserver(IAirport observer)
+        {
+            observers.Remove(observer);
+        }
+
+        public void notifyAirportInfoChange()
+        {
+            foreach (IAirport observer in observers)
+            {
+                observer.updateAirportInfo();
+            }
+        }
+
+        public void notifyMetarChange()
+        {
+            foreach (IAirport observer in observers)
+            {
+                observer.updateMetars();
+            }
+        }
+
+        public void notifyTafChange()
+        {
+            foreach (IAirport observer in observers)
+            {
+                observer.updateTafs();
+            }
+        }
+
+        public Dictionary<DateTime, MetarReport> getMetars(string icao)
+        {
+            Dictionary<DateTime, MetarReport> metars = metarService.getMetars(icao);
+
+            return metars;
+        }
+
+        public Dictionary<DateTime, TafReport> getTafs(string icao)
+        {
+            Dictionary<DateTime, TafReport> tafs = tafService.getTafs(icao);
+
+            return tafs;
+        }
+
+        public async Task fetchNewReportsFromAPI()
+        {
+            await metarService.fetchMetars();
+            await tafService.fetchTafs();
+            airportController.ResetFetchTimerAfterFetch();
+
+
+        }
+
+    }
+}

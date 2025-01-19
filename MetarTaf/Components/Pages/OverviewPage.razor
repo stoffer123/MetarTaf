@@ -1,8 +1,9 @@
 ﻿@page "/Overview"
-@using MetarTaf.Components.Models
-@using MetarTaf.Components.Services
+@using Metar.Decoder.Entity
+@using MetarTaf_Backend.Models
 @using Microsoft.AspNetCore.Components.Web.Extensions
 @using System.Text.Json
+@using Taf.Decoder.entity
 @implements IDisposable
 @rendermode InteractiveServer
 
@@ -20,7 +21,7 @@
         <button type="submit">Add Airport</button>
         <button @onclick="ConfirmAllReports">Acknowledge all changes</button>
         <button class="clearall-button" @onclick="@(async () => { if (await JSRuntime.InvokeAsync<bool>("confirmClearAllAirports")) { await ClearAllAirports(); } })">Clear All Airports</button>
-       
+
         <div>
             last acknowledge: @lastAcknowledgeTime.ToString("HH:mm:ss")
         </div>
@@ -38,16 +39,22 @@
 
 @foreach (var airport in airports)
 {
-    
-    var latestMetar = airport.Metars.OrderByDescending(m => m.Key).FirstOrDefault().Value;
-    var latestTaf = airport.Tafs.OrderByDescending(t => t.Key).FirstOrDefault().Value;
+    // Get the latest METAR and TAF reports
+    MetarReport latestMetar = airport.getMetars().OrderByDescending(m => m.Key).FirstOrDefault().Value;
+    TafReport latestTaf = airport.getTafs().OrderByDescending(t => t.Key).FirstOrDefault().Value;
 
-    var metarTime = latestMetar?.Time?.Dt ?? DateTime.MinValue;
-    var timeSinceLastMetar = currentTime - metarTime;
+    // Default to UTC now if the reportTime is not available
+    DateTime metarTime = latestMetar != null && latestMetar.reportTime != null
+        ? latestMetar.reportTime
+        : DateTime.UtcNow;
 
-    var tafTime = latestTaf?.time?.dt ?? DateTime.MinValue;
-    var timeSinceLastTAF = currentTime - tafTime;
+    TimeSpan timeSinceLastMetar = currentTime - metarTime;
 
+    DateTime tafTime = latestTaf != null && latestTaf.reportTime != null
+        ? latestTaf.reportTime
+        : DateTime.UtcNow;
+
+    TimeSpan timeSinceLastTAF = currentTime - tafTime;
 
     <div>
         <table class="table-parent">
@@ -66,31 +73,31 @@
                         <button @onclick="() => ConfirmReports(airport)" title="Confirm reports">
                             ✔️
                         </button>
-                        <button @onclick="() => RemoveAirport(airport.Icao)" title="Remove airport">
+                        <button @onclick="() => RemoveAirport(airport.getAirportInfo().icaoId)" title="Remove airport">
                             ❌
                         </button>
                     </td>
-                    <td class="station-cell" rowspan="2" @onclick="() => NavigateToAirportPage(airport.Icao)">
+                    <td class="station-cell" rowspan="2" @onclick="() => NavigateToAirportPage(airport.getAirportInfo().icaoId)">
                         <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
                             <div>
-                                @airport.Icao
+                                @airport.getAirportInfo().icaoId
                             </div>
                             <div class="station-city">
-                                @airport.Info?.city
+                                @airport.getAirportInfo().country
                             </div>
                         </div>
                     </td>
 
                     @if (latestTaf != null)
                     {
-                        <td class="report-type-cell @((airport.isNewTaf && showNewTaf ? "taf-new-report" : "taf-old-report"))">
+                        <td class="report-type-cell @((airport.getIsNewTaf() && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             TAF
                         </td>
-                        <td class="reports-time-cell @((airport.isNewTaf && showNewTaf ? "taf-new-report" : "taf-old-report"))">
+                        <td class="reports-time-cell @((airport.getIsNewTaf() && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             @tafTime.ToString("HH:mm") (@timeSinceLastTAF.ToString(@"hh\:mm"))
                         </td>
-                        <td class="@((airport.isNewTaf && showNewTaf ? "taf-new-report" : "taf-old-report"))">
-                            @latestTaf.raw
+                        <td class="@((airport.getIsNewTaf() && showNewTaf ? "taf-new-report" : "taf-old-report"))">
+                            @latestTaf.decodedTaf?.RawTaf
                         </td>
                     }
                     else
@@ -104,14 +111,14 @@
                 <tr>
                     @if (latestMetar != null)
                     {
-                        <td class="report-type-cell @((airport.isNewMetar && showNewMetar ? "metar-new-report" : "metar-old-report"))">
+                        <td class="report-type-cell @((airport.getIsNewMetar() && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             METAR
                         </td>
-                        <td class="reports-time-cell @((airport.isNewMetar && showNewMetar ? "metar-new-report" : "metar-old-report"))">
+                        <td class="reports-time-cell @((airport.getIsNewMetar() && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             @metarTime.ToString("HH:mm") (@timeSinceLastMetar.ToString(@"hh\:mm"))
                         </td>
-                        <td class="@((airport.isNewMetar && showNewMetar ? "metar-new-report" : "metar-old-report"))">
-                            @latestMetar.Raw
+                        <td class="@((airport.getIsNewMetar() && showNewMetar ? "metar-new-report" : "metar-old-report"))">
+                            @latestMetar.decodedMetar?.RawMetar
                         </td>
                     }
                     else
@@ -125,5 +132,6 @@
         </table>
     </div>
 }
+
 
 

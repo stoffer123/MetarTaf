@@ -1,7 +1,5 @@
 ﻿@page "/Developerpage"
 @rendermode InteractiveServer
-@using MetarTaf.Components.Factories;
-@using MetarTaf.Components.Models;
 
 <h3>Developer Page</h3>
 
@@ -14,14 +12,8 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var airportEntry in AirportFactory.airports)
-            {
-                <tr>
-                    <td>@airportEntry.Key</td> <!-- ICAO Code (key) -->
-                    <td>@airportEntry.Value.Info?.name</td> <!-- Airport object property (Name or any other) -->
-                    <td>@airportEntry.Value.referenceCount</td>
-                </tr>
-            }
+
+           
         </tbody>
     </table>
 </div>
