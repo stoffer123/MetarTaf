@@ -10,6 +10,7 @@ namespace MetarTaf_Backend.Models
     public abstract class Report
     {
         public DateTime reportTime { get; set; }
+        public DateTime fetchTime { get; set; }
 
         protected DateTime createReportTime(int day, string time)
         {

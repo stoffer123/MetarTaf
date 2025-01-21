@@ -14,6 +14,7 @@ namespace MetarTaf_Backend.Models
         {
             this.decodedTaf = decodedTaf;
             base.reportTime = base.createReportTime(decodedTaf.Day.Value, decodedTaf.Time);
+            base.fetchTime = DateTime.UtcNow;
         }
 
     }
