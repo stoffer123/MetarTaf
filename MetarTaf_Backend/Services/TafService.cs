@@ -71,6 +71,7 @@ namespace MetarTaf_Backend.Services
                             try
                             {
                                 string processedLine = line.Replace("AUTO ", "");
+                                processedLine = processedLine.Replace("RTD ", "");
 
                                 // Create a MetarReport object
                                 string tafLine = "TAF " + processedLine;
