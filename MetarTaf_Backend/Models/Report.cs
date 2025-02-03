@@ -14,13 +14,14 @@ namespace MetarTaf_Backend.Models
 
         protected DateTime createReportTime(int day, string time)
         {
-            string dateTimeString = day+time;
+
+            string dateTimeString = (day <= 9 ? "0" + day : day ) + time;
             string format = "ddHH:mm 'UTC'";
             CultureInfo culture = CultureInfo.InvariantCulture;
 
             if (!DateTime.TryParseExact(dateTimeString, format, culture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsedDateTime))
             {
-                Console.WriteLine("Failed to parse the date time string. returning time UtcNow");
+                Console.WriteLine($"Failed to parse the date time string. Day: {day} time: {time}");
             }
 
 
