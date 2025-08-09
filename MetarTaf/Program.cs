@@ -1,24 +1,45 @@
 using MetarTaf.Components;
 using MetarTaf_Backend;
 using MetarTaf_Backend.Services;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-await AirportInfoService.createAirportInfo();
+// 1) Registrér typed HttpClient til fetcheren (før AirportController)
+builder.Services.AddHttpClient<NorthAviMetFetcher>(c =>
+{
+    c.Timeout = TimeSpan.FromSeconds(20);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    AutomaticDecompression = DecompressionMethods.GZip |
+                             DecompressionMethods.Deflate |
+                             DecompressionMethods.Brotli
+});
 
+// 2) AirportController afhænger af fetcher
+builder.Services.AddSingleton<AirportController>(sp =>
+{
+    var fetcher = sp.GetRequiredService<NorthAviMetFetcher>();
+    return new AirportController(fetcher, timerDelayMinutes: 1);
+});
 
-builder.Services.AddSingleton<AirportController>();
-
-
-// Add services to the container.
+// 3) (almindelig Blazor Server opsætning)
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents(); ;
+    .AddInteractiveServerComponents();
 
 var app = builder.Build();
 
-await AirportInfoService.createAirportInfo();
+// 4) Hvis AirportInfoService skal køre noget init der bruger DI, gør det EFTER Build()
+using (var scope = app.Services.CreateScope())
+{
+    // Hvis createAirportInfo ikke skal bruge DI, kan du bare kalde den uden scope
+    // Ellers resolve services sådan her:
+    // var controller = scope.ServiceProvider.GetRequiredService<AirportController>();
+    await AirportInfoService.createAirportInfo();
+}
 
-// Configure the HTTP request pipeline.
+// 5) Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -30,7 +51,6 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+   .AddInteractiveServerRenderMode();
 
 app.Run();
-

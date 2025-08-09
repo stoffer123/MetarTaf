@@ -1,5 +1,6 @@
 ﻿using MetarTaf_Backend.Factories;
 using MetarTaf_Backend.Models;
+using MetarTaf_Backend.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,33 +11,37 @@ namespace MetarTaf_Backend
 {
     public class AirportController
     {
-        private Dictionary<string, IAirport> airports = new();
-        private IInfoStation infoStation;
-        private AirportFactory airportFactory;
-        private readonly object lockObject;
+        private readonly Dictionary<string, IAirport> airports = new();
+        private readonly IInfoStation infoStation;
+        private readonly AirportFactory airportFactory;
+        private readonly object lockObject = new();
 
         private Timer fetchTimer;
         private readonly object timerLock = new();
-        private int timerDelayMinutes;
+        private readonly int timerDelayMinutes;
 
-        public AirportController()
+        // Gate for at undgå overlappende fetch-kørsler
+        private readonly SemaphoreSlim _fetchGate = new(1, 1);
+
+        // NY: tag fetcher ind og giv den videre til AirportInfoStation
+        public AirportController(NorthAviMetFetcher fetcher, int timerDelayMinutes = 1)
         {
-            infoStation = new AirportInfoStation(this);
+            this.timerDelayMinutes = timerDelayMinutes;
+
+            infoStation = new AirportInfoStation(this, fetcher); // <-- ændret ctor
             airportFactory = new AirportFactory(infoStation);
-            lockObject = new object();
-            timerDelayMinutes = 1;
 
             InitializeFetchTimer();
         }
 
         private void InitializeFetchTimer()
         {
-            // Create a timer that fetches reports every 5 minutes
             fetchTimer = new Timer(async _ => await FetchReportsAsync(), null, TimeSpan.Zero, TimeSpan.FromMinutes(timerDelayMinutes));
         }
 
         private async Task FetchReportsAsync()
         {
+            if (!await _fetchGate.WaitAsync(0)) return; // en fetch kører allerede
             try
             {
                 Console.WriteLine($"Fetching reports at {DateTime.UtcNow:HH:mm:ss} UTC...");
@@ -45,6 +50,10 @@ namespace MetarTaf_Backend
             catch (Exception ex)
             {
                 Console.WriteLine($"Error during fetch: {ex.Message}");
+            }
+            finally
+            {
+                _fetchGate.Release();
             }
         }
 
@@ -62,21 +71,16 @@ namespace MetarTaf_Backend
         {
             lock (timerLock)
             {
-                // Stop the current timer
                 StopFetchTimer();
-
-                // Start the timer immediately to reset the countdown to zero
                 StartFetchTimer();
                 Console.WriteLine("Fetch timer reset after fetch.");
             }
         }
 
-
         public void StopFetchTimer()
         {
             lock (timerLock)
             {
-                // Stop the timer
                 fetchTimer?.Change(Timeout.Infinite, Timeout.Infinite);
                 Console.WriteLine("Fetch timer stopped.");
             }
@@ -86,7 +90,6 @@ namespace MetarTaf_Backend
         {
             lock (timerLock)
             {
-                // Restart the timer with a fresh delay of 5 minutes
                 fetchTimer?.Change(TimeSpan.FromMinutes(timerDelayMinutes), TimeSpan.FromMinutes(timerDelayMinutes));
                 Console.WriteLine("Fetch timer started.");
             }
@@ -96,20 +99,17 @@ namespace MetarTaf_Backend
         {
             lock (lockObject)
             {
-                IAirport airport = null;
-                if (airports.TryGetValue(icao, out airport))
+                if (airports.TryGetValue(icao, out var airport))
                 {
                     airport.incrementReferenceCount();
+                    return airport;
                 }
-                else
-                {
-                    airport = airportFactory.createAirport(icao);
 
-                    if (airport != null)
-                    {
-                        airports.Add(airport.getAirportInfo().icaoId, airport);
-                        infoStation.addObserver(airport);
-                    }
+                airport = airportFactory.createAirport(icao);
+                if (airport != null)
+                {
+                    airports.Add(airport.getAirportInfo().icaoId, airport);
+                    infoStation.addObserver(airport);
                 }
                 return airport;
             }
@@ -119,12 +119,9 @@ namespace MetarTaf_Backend
         {
             lock (lockObject)
             {
-                IAirport airport = null;
-
-                if (airports.TryGetValue(icao, out airport))
+                if (airports.TryGetValue(icao, out var airport))
                 {
                     airport.decrementReferenceCount();
-
                     if (airport.getReferenceCount() < 1)
                     {
                         airports.Remove(icao);
@@ -134,10 +131,6 @@ namespace MetarTaf_Backend
             }
         }
 
-        public List<string> getAirportIcaoList()
-        {
-            List<string> strings = airports.Keys.ToList();
-            return strings;
-        }
+        public List<string> getAirportIcaoList() => airports.Keys.ToList();
     }
 }
