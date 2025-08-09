@@ -1,113 +1,69 @@
 ﻿using Metar.Decoder.Entity;
 using MetarTaf_Backend.Factories;
 using MetarTaf_Backend.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Services
 {
     internal class MetarService
     {
-        private Dictionary<string, Dictionary<DateTime, MetarReport>> metars = new();
-        private string apiUrl = "https://api.met.no/weatherapi/tafmetar/1.0/metar?extended=true&icao=";
-        private MetarFactory metarFactory = new();
-        private IInfoStation infoStation;
-        private AirportController airportController;
+        private readonly Dictionary<string, Dictionary<DateTime, MetarReport>> metars = new();
+        private readonly MetarFactory metarFactory = new();
+        private readonly IInfoStation infoStation;
+        private readonly AirportController airportController;
+        private readonly NorthAviMetFetcher fetcher;
 
-        public MetarService(IInfoStation infostation, AirportController airportController)
+        // NY: injicer fetcher
+        public MetarService(IInfoStation infostation, AirportController airportController, NorthAviMetFetcher fetcher)
         {
             this.infoStation = infostation;
             this.airportController = airportController;
+            this.fetcher = fetcher;
         }
-
 
         public async Task fetchMetars()
         {
-            string[] icaoList = airportController.getAirportIcaoList().ToArray();
-            string icaoString = string.Empty;
-
-            //Build icaoString for the request URL
-            for (int i = 0; i < icaoList.Length; i++)
+            var icaoList = airportController.getAirportIcaoList().ToArray();
+            if (icaoList.Length == 0)
             {
-                icaoString += icaoList[i];
-                if(i != icaoList.Length - 1)
-                {
-                    icaoString += ",";
-                }
+                infoStation.notifyMetarChange();
+                return;
             }
-
-
-            // Combine the API URL with the ICAO string
-            string requestUrl = apiUrl + icaoString;
 
             try
             {
-                using (HttpClient client = new HttpClient())
+                var (metarMap, _) = await fetcher.GetLatestPerIcaoAsync(icaoList, windValidTime: 0);
+
+                foreach (var kv in metarMap)
                 {
-                    // Optional: Add headers if required by the API
-                    client.DefaultRequestHeaders.Add("User-Agent", "MetarTaf/TEST (contact: christopherMikkelsen@live.dk)");
+                    // fx "METAR EKCH 091920Z ..."
+                    var metarLine = kv.Value;
+                    // ryd "AUTO " hvis din parser kræver det
+                    metarLine = metarLine.Replace(" AUTO ", " ");
 
-
-                    // Send GET request to the API
-                    HttpResponseMessage response = await client.GetAsync(requestUrl);
-
-                    if (response.IsSuccessStatusCode)
+                    try
                     {
-                        // Read the response as a string
-                        string responseData = await response.Content.ReadAsStringAsync();
+                        var metar = metarFactory.createMetar(
+                            metarLine.StartsWith("METAR ") ? metarLine : "METAR " + metarLine
+                        );
 
-                        // Split the response into lines
-                        string[] lines = responseData.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        var icao = metar.decodedMetar.ICAO;
+                        var reportTime = metar.reportTime;
 
+                        if (!metars.ContainsKey(icao))
+                            metars[icao] = new Dictionary<DateTime, MetarReport>();
 
-
-                        // Process each line
-                        foreach (string line in lines)
-                        {
-                            try
-                            {
-                                string processedLine = line.Replace("AUTO ", "");
-
-                                // Create a MetarReport object
-                                string metarLine = "METAR " + processedLine;
-
-                                MetarReport metar = metarFactory.createMetar(metarLine); //"METAR" prefix is needed
-                                string icao = metar.decodedMetar.ICAO;
-                                DateTime reportTime = metar.reportTime;
-
-                                // Check if the ICAO key exists in the dictionary
-                                if (!metars.ContainsKey(icao))
-                                {
-                                    // Add a new entry for the airport
-                                    metars[icao] = new Dictionary<DateTime, MetarReport>();
-                                }
-
-                                // Check if the reportTime key exists for the airport
-                                if (!metars[icao].ContainsKey(reportTime))
-                                {
-                                    // Add the MetarReport for the specific report time
-                                    metars[icao][reportTime] = metar;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Error processing line: {line}. Exception: {ex.Message}");
-                            }
-                        }
+                        if (!metars[icao].ContainsKey(reportTime))
+                            metars[icao][reportTime] = metar;
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                        Console.WriteLine($"Error parsing METAR for {kv.Key}: {ex.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                Console.WriteLine($"fetchMetars failed: {ex.Message}");
             }
 
             infoStation.notifyMetarChange();
@@ -115,28 +71,9 @@ namespace MetarTaf_Backend.Services
 
         public Dictionary<DateTime, MetarReport> getMetars(string icao)
         {
-            Dictionary<DateTime, MetarReport> metarList;
-            if(metars.TryGetValue(icao, out metarList))
-            {
-                Console.WriteLine($"Successfully found {icao} in dict of metars");
-            }
-            else
-            {
-                Console.WriteLine($"Failed to find {icao} in dict of metars, returning empty dict");
-                metarList = new Dictionary<DateTime, MetarReport>();
-            }
-
-            return metarList;
+            return metars.TryGetValue(icao, out var dict)
+                ? dict
+                : new Dictionary<DateTime, MetarReport>();
         }
-
-        //For testing
-        public void printIcaoList()
-        {
-            foreach(KeyValuePair<string, Dictionary<DateTime, MetarReport>> kvp in metars)
-            {
-                Console.WriteLine(kvp.Key);
-            }
-        }
-
     }
 }

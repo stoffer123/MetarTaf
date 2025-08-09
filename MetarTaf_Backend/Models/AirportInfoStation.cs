@@ -1,32 +1,41 @@
 ﻿using MetarTaf_Backend.Services;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using MetarTaf_Backend.Services;
 
 namespace MetarTaf_Backend.Models
 {
     internal class AirportInfoStation : IInfoStation
     {
-        private List<IAirport> observers;
-        private MetarService metarService;
-        private TafService tafService;
-        private AirportController airportController;
-        
-        public AirportInfoStation(AirportController airportController)
+        private readonly List<IAirport> observers;
+        private readonly MetarService metarService;
+        private readonly TafService tafService;
+        private readonly AirportController airportController;
+
+        // Til at undgå overlappende fetch-kørsler
+        private readonly SemaphoreSlim _fetchGate = new(1, 1);
+
+        // NY: injicer NorthAviMetFetcher og giv den videre til services
+        public AirportInfoStation(AirportController airportController, NorthAviMetFetcher fetcher)
         {
             this.airportController = airportController;
             observers = new List<IAirport>();
-            metarService = new(this, airportController);
-            tafService = new(this, airportController);
+
+            // MetarService/TafService er dine eksisterende klasser – vi bruger de opdaterede ctor’er,
+            // der tager (IInfoStation, AirportController, NorthAviMetFetcher)
+            metarService = new MetarService(this, airportController, fetcher);
+            tafService   = new TafService(this, airportController, fetcher);
         }
 
         public void addObserver(IAirport observer)
         {
             observers.Add(observer);
-            fetchNewReportsFromAPI();
+            // fire-and-forget men med gate, så vi ikke kører flere fetches parallelt
+            _ = FetchIfIdle();
         }
+
         public void removeObserver(IAirport observer)
         {
             observers.Remove(observer);
@@ -35,49 +44,50 @@ namespace MetarTaf_Backend.Models
         public void notifyAirportInfoChange()
         {
             foreach (IAirport observer in observers)
-            {
                 observer.updateAirportInfo();
-            }
         }
 
         public void notifyMetarChange()
         {
             foreach (IAirport observer in observers)
-            {
                 observer.updateMetars();
-            }
         }
 
         public void notifyTafChange()
         {
             foreach (IAirport observer in observers)
-            {
                 observer.updateTafs();
-            }
         }
 
         public Dictionary<DateTime, MetarReport> getMetars(string icao)
-        {
-            Dictionary<DateTime, MetarReport> metars = metarService.getMetars(icao);
-
-            return metars;
-        }
+            => metarService.getMetars(icao);
 
         public Dictionary<DateTime, TafReport> getTafs(string icao)
-        {
-            Dictionary<DateTime, TafReport> tafs = tafService.getTafs(icao);
-
-            return tafs;
-        }
+            => tafService.getTafs(icao);
 
         public async Task fetchNewReportsFromAPI()
         {
-            await metarService.fetchMetars();
-            await tafService.fetchTafs();
+            // Kør begge fetch i parallel, men kontrolleret af gate
+            await Task.WhenAll(
+                metarService.fetchMetars(),
+                tafService.fetchTafs()
+            );
+
             airportController.ResetFetchTimerAfterFetch();
-
-
         }
 
+        // Helper der sikrer single-flight
+        private async Task FetchIfIdle()
+        {
+            if (!await _fetchGate.WaitAsync(0)) return; // en fetch kører allerede
+            try
+            {
+                await fetchNewReportsFromAPI();
+            }
+            finally
+            {
+                _fetchGate.Release();
+            }
+        }
     }
 }
