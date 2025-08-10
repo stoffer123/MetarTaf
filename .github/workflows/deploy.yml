@@ -49,14 +49,17 @@ jobs:
               echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u stoffer123 --password-stdin
             fi
 
-            # Pull og tjek om noget faktisk blev opdateret
-            if docker compose pull app 2>&1 | tee /tmp/pull.log | grep -qiE 'Downloaded newer image|Pull complete|Digest:'; then
+            # Kør pull og gem output i en fil (ingen pipes der kan SIGPIPE'e)
+            OUT="$(mktemp)"
+            docker compose pull app | tee "$OUT"
+
+            if grep -qiE 'Downloaded newer image|Pull complete|Digest:' "$OUT"; then
               echo "Ny version fundet → genstarter…"
               docker compose up -d
             else
               echo "Ingen ændring → skipper genstart."
             fi
 
-            # Ryd gamle lag (valgfrit)
+            rm -f "$OUT"
             docker image prune -f --filter "until=24h" >/dev/null 2>&1 || true
 
