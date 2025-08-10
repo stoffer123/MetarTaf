@@ -49,6 +49,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
+app.MapGet("/healthz", () => Results.Ok("ok"));
 
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();
