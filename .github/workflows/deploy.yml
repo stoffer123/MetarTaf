@@ -41,25 +41,12 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           script_stop: true
           script: |
-            set -euo pipefail
+            set -e
             cd /opt/metartaf
-
-            # Login til GHCR hvis image er privat (ellers springes over)
+            # Login til GHCR hvis dit image er privat (ellers ignorer fejl)
             if [ -n "${{ secrets.GHCR_TOKEN }}" ]; then
               echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u stoffer123 --password-stdin
             fi
-
-            # Kør pull og gem output i en fil (ingen pipes der kan SIGPIPE'e)
-            OUT="$(mktemp)"
-            docker compose pull app | tee "$OUT"
-
-            if grep -qiE 'Downloaded newer image|Pull complete|Digest:' "$OUT"; then
-              echo "Ny version fundet → genstarter…"
-              docker compose up -d
-            else
-              echo "Ingen ændring → skipper genstart."
-            fi
-
-            rm -f "$OUT"
-            docker image prune -f --filter "until=24h" >/dev/null 2>&1 || true
-
+            docker compose pull app
+            docker compose up -d
+            docker image prune -f --filter "until=24h"
