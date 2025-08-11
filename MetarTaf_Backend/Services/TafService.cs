@@ -13,7 +13,6 @@ namespace MetarTaf_Backend.Services
         private readonly AirportController airportController;
         private readonly NorthAviMetFetcher fetcher;
 
-        // NY: injicer fetcher
         public TafService(IInfoStation infostation, AirportController airportController, NorthAviMetFetcher fetcher)
         {
             this.infoStation = infostation;
