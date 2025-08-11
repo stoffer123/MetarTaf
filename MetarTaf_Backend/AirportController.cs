@@ -104,6 +104,7 @@ namespace MetarTaf_Backend
                     {
                         airports.Remove(icao);
                         infoStation.removeObserver(airport);
+                        airport.Dispose();
                     }
                 }
             }
