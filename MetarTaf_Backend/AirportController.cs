@@ -45,7 +45,7 @@ namespace MetarTaf_Backend
             try
             {
                 Console.WriteLine($"Fetching reports at {DateTime.UtcNow:HH:mm:ss} UTC...");
-                await infoStation.fetchNewReportsFromAPI();
+                await infoStation.FetchNewReportsAsync();
             }
             catch (Exception ex)
             {

@@ -15,6 +15,6 @@ namespace MetarTaf_Backend.Models
         void notifyAirportInfoChange();
         Dictionary<DateTime, MetarReport> getMetars(string icao);
         Dictionary<DateTime, TafReport> getTafs(string icao);
-        Task fetchNewReportsFromAPI();
+        Task<bool> FetchNewReportsAsync(CancellationToken ct = default);
     }
 }
