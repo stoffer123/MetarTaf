@@ -76,9 +76,15 @@ namespace MetarTaf_Backend.Models
             if (!await _fetchGate.WaitAsync(0, ct)) return false;
             try
             {
+                Console.WriteLine($"Fetching reports at {DateTime.UtcNow:HH:mm:ss} UTC...");
                 await Task.WhenAll(metarService.fetchMetars(), tafService.fetchTafs());
                 airportController.ResetFetchTimerAfterFetch();
                 return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during fetch: {ex.Message}");
+                return false;
             }
             finally
             {
