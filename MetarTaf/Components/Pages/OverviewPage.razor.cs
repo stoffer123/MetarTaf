@@ -39,6 +39,13 @@ namespace MetarTaf.Components.Pages
             }
         }
 
+        private static TimeSpan SafeAge(DateTime nowUtc, DateTime reportUtc)
+        {
+            var age = nowUtc - reportUtc;
+            return age < TimeSpan.Zero ? TimeSpan.Zero : age;
+        }
+
+
         private void UpdateCurrentTime(object? state)
         {
             currentTime = DateTime.UtcNow;
