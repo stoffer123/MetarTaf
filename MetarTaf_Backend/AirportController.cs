@@ -20,15 +20,11 @@ namespace MetarTaf_Backend
         private readonly object timerLock = new();
         private readonly int timerDelayMinutes;
 
-        // Gate for at undgå overlappende fetch-kørsler
-        private readonly SemaphoreSlim _fetchGate = new(1, 1);
-
-        // NY: tag fetcher ind og giv den videre til AirportInfoStation
         public AirportController(NorthAviMetFetcher fetcher, int timerDelayMinutes = 1)
         {
             this.timerDelayMinutes = timerDelayMinutes;
 
-            infoStation = new AirportInfoStation(this, fetcher); // <-- ændret ctor
+            infoStation = new AirportInfoStation(this, fetcher);
             airportFactory = new AirportFactory(infoStation);
 
             InitializeFetchTimer();
@@ -36,25 +32,7 @@ namespace MetarTaf_Backend
 
         private void InitializeFetchTimer()
         {
-            fetchTimer = new Timer(async _ => await FetchReportsAsync(), null, TimeSpan.Zero, TimeSpan.FromMinutes(timerDelayMinutes));
-        }
-
-        private async Task FetchReportsAsync()
-        {
-            if (!await _fetchGate.WaitAsync(0)) return; // en fetch kører allerede
-            try
-            {
-                Console.WriteLine($"Fetching reports at {DateTime.UtcNow:HH:mm:ss} UTC...");
-                await infoStation.fetchNewReportsFromAPI();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during fetch: {ex.Message}");
-            }
-            finally
-            {
-                _fetchGate.Release();
-            }
+            fetchTimer = new Timer(async _ => await infoStation.FetchNewReportsAsync(), null, TimeSpan.Zero, TimeSpan.FromMinutes(timerDelayMinutes));
         }
 
         public void ResetFetchTimer()

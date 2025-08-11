@@ -13,7 +13,6 @@ namespace MetarTaf_Backend.Services
         private readonly AirportController airportController;
         private readonly NorthAviMetFetcher fetcher;
 
-        // NY: injicer fetcher
         public TafService(IInfoStation infostation, AirportController airportController, NorthAviMetFetcher fetcher)
         {
             this.infoStation = infostation;
@@ -21,7 +20,7 @@ namespace MetarTaf_Backend.Services
             this.fetcher = fetcher;
         }
 
-        public async Task fetchTafs()
+        public async Task FetchTafs()
         {
             var icaoList = airportController.getAirportIcaoList().ToArray();
             if (icaoList.Length == 0)
@@ -38,23 +37,26 @@ namespace MetarTaf_Backend.Services
                 {
                     // fx "TAF EKCH 091714Z 0918/1018 ..."
                     var tafLine = kv.Value;
-                    // ryd "RTD " hvis du ikke vil vise retificerede tags
-                    tafLine = tafLine.Replace(" RTD ", " ");
+                    
+                    tafLine = tafLine.Replace(" RTD ", " "); //RTD er ikke understøtet af decoderen, der arbejdes på det
 
                     try
                     {
-                        var taf = tafFactory.createTaf(
-                            tafLine.StartsWith("TAF ") ? tafLine : "TAF " + tafLine
-                        );
+                        var taf = tafFactory.createTaf(tafLine.StartsWith("TAF ") ?
+                            tafLine : "TAF " + tafLine);
 
                         var icao = taf.decodedTaf.Icao;
                         var reportTime = taf.reportTime;
 
                         if (!tafs.ContainsKey(icao))
+                        {
                             tafs[icao] = new Dictionary<DateTime, TafReport>();
+                        }
 
                         if (!tafs[icao].ContainsKey(reportTime))
+                        {
                             tafs[icao][reportTime] = taf;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -72,9 +74,8 @@ namespace MetarTaf_Backend.Services
 
         public Dictionary<DateTime, TafReport> getTafs(string icao)
         {
-            return tafs.TryGetValue(icao, out var dict)
-                ? dict
-                : new Dictionary<DateTime, TafReport>();
+            return tafs.TryGetValue(icao, out var dict) ?
+                dict : new Dictionary<DateTime, TafReport>();
         }
     }
 }

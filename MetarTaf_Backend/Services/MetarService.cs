@@ -12,7 +12,6 @@ namespace MetarTaf_Backend.Services
         private readonly AirportController airportController;
         private readonly NorthAviMetFetcher fetcher;
 
-        // NY: injicer fetcher
         public MetarService(IInfoStation infostation, AirportController airportController, NorthAviMetFetcher fetcher)
         {
             this.infoStation = infostation;
@@ -37,23 +36,26 @@ namespace MetarTaf_Backend.Services
                 {
                     // fx "METAR EKCH 091920Z ..."
                     var metarLine = kv.Value;
-                    // ryd "AUTO " hvis din parser kræver det
                     metarLine = metarLine.Replace(" AUTO ", " ");
 
                     try
                     {
-                        var metar = metarFactory.createMetar(
-                            metarLine.StartsWith("METAR ") ? metarLine : "METAR " + metarLine
-                        );
+                        var metar = metarFactory.createMetar(metarLine.StartsWith("METAR ") ?
+                            metarLine : "METAR " + metarLine
+                            );
 
                         var icao = metar.decodedMetar.ICAO;
                         var reportTime = metar.reportTime;
 
                         if (!metars.ContainsKey(icao))
+                        {
                             metars[icao] = new Dictionary<DateTime, MetarReport>();
+                        }
 
                         if (!metars[icao].ContainsKey(reportTime))
+                        {
                             metars[icao][reportTime] = metar;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -71,9 +73,8 @@ namespace MetarTaf_Backend.Services
 
         public Dictionary<DateTime, MetarReport> getMetars(string icao)
         {
-            return metars.TryGetValue(icao, out var dict)
-                ? dict
-                : new Dictionary<DateTime, MetarReport>();
+            return metars.TryGetValue(icao, out var dict) ?
+                dict : new Dictionary<DateTime, MetarReport>();
         }
     }
 }
