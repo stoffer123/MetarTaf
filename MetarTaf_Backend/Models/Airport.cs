@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MetarTaf_Backend.Models
 {
@@ -15,9 +16,12 @@ namespace MetarTaf_Backend.Models
         public Dictionary<DateTime, TafReport> tafs { get; }
         public string icao { get; }
         private int referenceCount;
+        private readonly object _gate = new();
+        private readonly object _debounceGate = new();
+        private System.Threading.Timer? _debounceTimer;
+        private static readonly TimeSpan _debounceDelay = TimeSpan.FromMilliseconds(50);
 
-        public bool metarIsNew { get; set; }
-        public bool tafIsNew { get; set; }
+        public event Action? Updated;
 
 
         public Airport(IInfoStation infoStation, AirportInfo airportInfo)
@@ -28,11 +32,6 @@ namespace MetarTaf_Backend.Models
             tafs = new Dictionary<DateTime, TafReport>();
             icao = airportInfo.icaoId;
             referenceCount = 1;
-            metarIsNew = false;
-            tafIsNew = false;
-
-            updateMetars();
-            updateTafs();
             
         }
 
@@ -40,34 +39,52 @@ namespace MetarTaf_Backend.Models
         {
             throw new NotImplementedException();
         }
-        
+
         public void updateMetars()
         {
-            Dictionary<DateTime, MetarReport> newMetars = infoStation.getMetars(icao);
-
-            foreach (KeyValuePair<DateTime, MetarReport> kvp in newMetars)
+            var newMetars = infoStation.getMetars(icao);
+            var added = false;
+            lock (_gate)
             {
-                MetarReport newMetar = kvp.Value;
-
-                if(metars.TryAdd(kvp.Key, newMetar))
-                {
-                    metarIsNew = true;
-                }
+                foreach (var kvp in newMetars)
+                    if (metars.TryAdd(kvp.Key, kvp.Value))
+                        added = true;
+            }
+            if (added)
+            {
+                RaiseUpdated();
             }
         }
 
         public void updateTafs()
         {
-            Dictionary<DateTime, TafReport> newTafs = infoStation.getTafs(icao);
-
-            foreach (KeyValuePair<DateTime, TafReport> kvp in newTafs)
+            var newTafs = infoStation.getTafs(icao);
+            var added = false;
+            lock (_gate)
             {
-                TafReport newTaf = kvp.Value;
+                foreach (var kvp in newTafs)
+                    if (tafs.TryAdd(kvp.Key, kvp.Value))
+                        added = true;
+            }
+            if (added)
+            {
+                RaiseUpdated();
+            }
+        }
 
-                if (tafs.TryAdd(kvp.Key, newTaf))
+        private void RaiseUpdated()
+        {
+            // Coalesce flere kald inden for debounce-vinduet til ét event
+            lock (_debounceGate)
+            {
+                // nulstil (så vi udskyder, hvis der kommer et nyt “ping” hurtigt efter)
+                _debounceTimer?.Dispose();
+                _debounceTimer = new System.Threading.Timer(_ =>
                 {
-                    tafIsNew = true;
-                }
+                    // fyr eventet udenfor lock
+                    var h = Updated;
+                    h?.Invoke();
+                }, null, _debounceDelay, System.Threading.Timeout.InfiniteTimeSpan);
             }
         }
 
@@ -91,34 +108,31 @@ namespace MetarTaf_Backend.Models
             return airportInfo;
         }
 
-        public Dictionary<DateTime, MetarReport> getMetars()
+        public IReadOnlyDictionary<DateTime, MetarReport> getMetars()
         {
-            return metars;
+            lock (_gate)
+            {
+                return new Dictionary<DateTime, MetarReport>(metars);
+            }
+            
         }
 
-        public Dictionary<DateTime, TafReport> getTafs()
+        public IReadOnlyDictionary<DateTime, TafReport> getTafs()
         {
-            return tafs;
+            lock (_gate)
+            {
+                return new Dictionary<DateTime, TafReport>(tafs);
+            }
         }
 
-        public void setMetarIsNew(bool isNew)
+        public void Dispose()
         {
-            metarIsNew = isNew;
+            lock (_debounceGate)
+            {
+                _debounceTimer?.Dispose();
+                _debounceTimer = null;
+            }
         }
 
-        public void setTafIsNew(bool isNew)
-        {
-            tafIsNew = isNew;
-        }
-
-        public bool getIsNewMetar()
-        {
-            return metarIsNew;
-        }
-
-        public bool getIsNewTaf()
-        {
-            return tafIsNew;
-        }
     }
 }
