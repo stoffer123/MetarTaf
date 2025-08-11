@@ -77,7 +77,7 @@ namespace MetarTaf_Backend.Models
             try
             {
                 Console.WriteLine($"Fetching reports at {DateTime.UtcNow:HH:mm:ss} UTC...");
-                await Task.WhenAll(metarService.fetchMetars(), tafService.fetchTafs());
+                await Task.WhenAll(metarService.fetchMetars(), tafService.FetchTafs());
                 airportController.ResetFetchTimerAfterFetch();
                 return true;
             }
