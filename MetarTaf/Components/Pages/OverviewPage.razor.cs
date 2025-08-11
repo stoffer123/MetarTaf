@@ -76,8 +76,8 @@ namespace MetarTaf.Components.Pages
                     // Check if the airport has valid data
                     if (airport != null)
                     {
-                        await SaveAirportsToLocalStorage();
                         airports.Add(airport);
+                        await SaveAirportsToLocalStorage();
                         StateHasChanged();
 
                     }
