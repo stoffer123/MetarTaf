@@ -8,7 +8,10 @@ namespace MetarTaf_Backend.Services
     public sealed class NorthAviMetFetcher
     {
         private readonly HttpClient _http;
-        public NorthAviMetFetcher(HttpClient http) => _http = http;
+        public NorthAviMetFetcher(HttpClient http)
+        {
+            _http = http;
+        }
 
         public async Task<string> GetOpmetRawAsync(string query, int windValidTime = 0, CancellationToken ct = default)
         {
@@ -24,8 +27,14 @@ namespace MetarTaf_Backend.Services
             res.EnsureSuccessStatusCode();
 
             var bytes = await res.Content.ReadAsByteArrayAsync(ct);
-            try { return Encoding.UTF8.GetString(bytes); }
-            catch { return Encoding.Latin1.GetString(bytes); }
+            try
+            {
+                return Encoding.UTF8.GetString(bytes);
+            }
+            catch 
+            { 
+                return Encoding.Latin1.GetString(bytes);
+            }
         }
 
         // Første <td> kan være: TAF | METAR | SPECI + valgfri AMD/COR
@@ -36,8 +45,10 @@ namespace MetarTaf_Backend.Services
         // Hvis AMD/COR ligger i starten af body i stedet
         static readonly Regex RxModifier = new(@"^(AMD|COR)\s+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        static string Collapse(string s) =>
-            Regex.Replace(s.Replace('\u00A0', ' ').Replace('\t', ' '), @"\s+", " ").Trim();
+        static string Collapse(string s)
+        {
+            return Regex.Replace(s.Replace('\u00A0', ' ').Replace('\t', ' '), @"\s+", " ").Trim();
+        }
 
         public async Task<(Dictionary<string, string> Metar, Dictionary<string, string> Taf)>
             GetLatestPerIcaoAsync(IEnumerable<string> icaos, int windValidTime = 0, CancellationToken ct = default)
@@ -79,7 +90,14 @@ namespace MetarTaf_Backend.Services
                         ? $"{kind} {icao} {body}"
                         : $"{kind} {modifier} {icao} {body}";
 
-                    if (kind == "METAR") metar[icao] = line; else taf[icao] = line; // sidste = nyeste
+                    if (kind == "METAR")
+                    {
+                        metar[icao] = line;
+                    }
+                    else
+                    {
+                        taf[icao] = line;
+                    }
                 }
                 return (metar, taf);
             }
