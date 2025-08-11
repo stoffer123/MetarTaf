@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MetarTaf_Backend.Models
 {
@@ -15,6 +16,10 @@ namespace MetarTaf_Backend.Models
         public Dictionary<DateTime, TafReport> tafs { get; }
         public string icao { get; }
         private int referenceCount;
+        private readonly object _gate = new();
+        private readonly object _debounceGate = new();
+        private System.Threading.Timer? _debounceTimer;
+        private static readonly TimeSpan _debounceDelay = TimeSpan.FromMilliseconds(50);
 
         public event Action? Updated;
 
@@ -27,9 +32,6 @@ namespace MetarTaf_Backend.Models
             tafs = new Dictionary<DateTime, TafReport>();
             icao = airportInfo.icaoId;
             referenceCount = 1;
-
-            updateMetars();
-            updateTafs();
             
         }
 
@@ -42,22 +44,48 @@ namespace MetarTaf_Backend.Models
         {
             var newMetars = infoStation.getMetars(icao);
             var added = false;
-            foreach (var kvp in newMetars)
-                if (metars.TryAdd(kvp.Key, kvp.Value))
-                    added = true;
-
-            if (added) Updated?.Invoke();
+            lock (_gate)
+            {
+                foreach (var kvp in newMetars)
+                    if (metars.TryAdd(kvp.Key, kvp.Value))
+                        added = true;
+            }
+            if (added)
+            {
+                RaiseUpdated();
+            }
         }
 
         public void updateTafs()
         {
             var newTafs = infoStation.getTafs(icao);
             var added = false;
-            foreach (var kvp in newTafs)
-                if (tafs.TryAdd(kvp.Key, kvp.Value))
-                    added = true;
+            lock (_gate)
+            {
+                foreach (var kvp in newTafs)
+                    if (tafs.TryAdd(kvp.Key, kvp.Value))
+                        added = true;
+            }
+            if (added)
+            {
+                RaiseUpdated();
+            }
+        }
 
-            if (added) Updated?.Invoke();
+        private void RaiseUpdated()
+        {
+            // Coalesce flere kald inden for debounce-vinduet til ét event
+            lock (_debounceGate)
+            {
+                // nulstil (så vi udskyder, hvis der kommer et nyt “ping” hurtigt efter)
+                _debounceTimer?.Dispose();
+                _debounceTimer = new System.Threading.Timer(_ =>
+                {
+                    // fyr eventet udenfor lock
+                    var h = Updated;
+                    h?.Invoke();
+                }, null, _debounceDelay, System.Threading.Timeout.InfiniteTimeSpan);
+            }
         }
 
         public void incrementReferenceCount()
@@ -80,16 +108,31 @@ namespace MetarTaf_Backend.Models
             return airportInfo;
         }
 
-        public Dictionary<DateTime, MetarReport> getMetars()
+        public IReadOnlyDictionary<DateTime, MetarReport> getMetars()
         {
-            return metars;
+            lock (_gate)
+            {
+                return new Dictionary<DateTime, MetarReport>(metars);
+            }
+            
         }
 
-        public Dictionary<DateTime, TafReport> getTafs()
+        public IReadOnlyDictionary<DateTime, TafReport> getTafs()
         {
-            return tafs;
+            lock (_gate)
+            {
+                return new Dictionary<DateTime, TafReport>(tafs);
+            }
         }
 
+        public void Dispose()
+        {
+            lock (_debounceGate)
+            {
+                _debounceTimer?.Dispose();
+                _debounceTimer = null;
+            }
+        }
 
     }
 }

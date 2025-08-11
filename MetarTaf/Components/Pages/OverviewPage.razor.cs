@@ -21,6 +21,8 @@ namespace MetarTaf.Components.Pages
         private readonly AckTracker ack = new();
         const string AckMetarKey = "ackMetarUtc";
         const string AckTafKey = "ackTafUtc";
+        // undgå dobbelt-subscribe (valgfrit men rart)
+        private readonly HashSet<string> _subscribed = new(StringComparer.OrdinalIgnoreCase);
         [Inject] private IJSRuntime JSRuntime { get; set; }
         [Inject] private AirportController airportController { get; set; }
 
@@ -62,7 +64,7 @@ namespace MetarTaf.Components.Pages
         {
             if (!string.IsNullOrEmpty(newAirportModel.Icao))
             {
-                string icaoToAdd = newAirportModel.Icao;
+                string icaoToAdd = newAirportModel.Icao?.Trim().ToUpperInvariant();
                 newAirportModel.Icao = String.Empty;
 
                 // Check if an airport with the same ICAO code already exists in the list
@@ -81,6 +83,7 @@ namespace MetarTaf.Components.Pages
                     // Check if the airport has valid data
                     if (airport != null)
                     {
+                        Attach(airport); // Attach the airport to the controller
                         airports.Add(airport);
                         await SaveAirportsToLocalStorage();
                         StateHasChanged();
@@ -107,16 +110,25 @@ namespace MetarTaf.Components.Pages
 
         private async Task RemoveAirport(string icao)
         {
+            var ap = airports.FirstOrDefault(a => a.getAirportInfo().icaoId == icao);
+            if (ap != null)
+            {
+                Detach(ap);   // <-- NYT
+            }
+
             airportController.releaseAirport(icao);
             airports.RemoveAll(a => a.getAirportInfo().icaoId == icao);
             await SaveAirportsToLocalStorage();
             StateHasChanged();
         }
 
+
+
         private async Task ClearAllAirports()
         {
             foreach (IAirport airport in airports)
             {
+                Detach(airport); // Detach the airport from the controller
                 airportController.releaseAirport(airport.getAirportInfo().icaoId);
             }
 
@@ -136,7 +148,6 @@ namespace MetarTaf.Components.Pages
 
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", AirportsStorageKey, JsonSerializer.Serialize(icaoList));
         }
-
         private async Task LoadAirportsFromLocalStorage()
         {
             var icaoListJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", AirportsStorageKey);
@@ -145,9 +156,10 @@ namespace MetarTaf.Components.Pages
                 var icaoList = JsonSerializer.Deserialize<List<string>>(icaoListJson);
                 if (icaoList != null)
                 {
-                    foreach (var icao in icaoList)
+                    foreach (var icao in icaoList.Distinct(StringComparer.OrdinalIgnoreCase))
                     {
                         var airport = airportController.getAirport(icao);
+                        Attach(airport);           // <-- NYT
                         airports.Add(airport);
                     }
                 }
@@ -256,14 +268,32 @@ namespace MetarTaf.Components.Pages
             );
         }
 
+        // kald denne når en airport melder nyt
+        private void OnAirportUpdated()
+        {
+            InvokeAsync(StateHasChanged);
+        }
+
+        private void Attach(IAirport ap)
+        {
+            var icao = ap.getAirportInfo().icaoId;
+            if (_subscribed.Add(icao))
+                ap.Updated += OnAirportUpdated;
+        }
+
+        private void Detach(IAirport ap)
+        {
+            var icao = ap.getAirportInfo().icaoId;
+            if (_subscribed.Remove(icao))
+                ap.Updated -= OnAirportUpdated;
+        }
+
         public void Dispose()
         {
-            // slip alle subscriptions for denne side
-            foreach (var a in airports.ToArray())
-                airportController.releaseAirport(a.getAirportInfo().icaoId);
-
-            airports.Clear();
+            foreach (var ap in airports)
+                Detach(ap);        // <-- NYT
             timer?.Dispose();
         }
+
     }
 }

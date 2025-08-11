@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace MetarTaf_Backend.Models
 {
-    public interface IAirport
+    public interface IAirport : IDisposable
     {
+        event Action? Updated;
         void updateMetars();
         void updateTafs();
         void updateAirportInfo();
@@ -17,8 +18,10 @@ namespace MetarTaf_Backend.Models
         int getReferenceCount();
 
         AirportInfo getAirportInfo();
-        Dictionary<DateTime, MetarReport> getMetars();
-        Dictionary<DateTime, TafReport> getTafs();
+        IReadOnlyDictionary<DateTime, MetarReport> getMetars();
+        IReadOnlyDictionary<DateTime, TafReport> getTafs();
+        void Dispose();
+
 
     }
 }
