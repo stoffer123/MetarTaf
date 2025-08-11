@@ -179,6 +179,11 @@ namespace MetarTaf.Components.Pages
 
         public void Dispose()
         {
+            // slip alle subscriptions for denne side
+            foreach (var a in airports.ToArray())
+                airportController.releaseAirport(a.getAirportInfo().icaoId);
+
+            airports.Clear();
             timer?.Dispose();
         }
     }
