@@ -1,5 +1,6 @@
 using MetarTaf_Backend;
 using MetarTaf_Backend.Models;
+using MetarTaf_Backend.Utils;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text.Json;
@@ -17,6 +18,9 @@ namespace MetarTaf.Components.Pages
         private bool showNewTaf = true;
         private bool showNewMetar = true;
         private DateTime lastAcknowledgeTime = DateTime.MinValue;
+        private readonly AckTracker ack = new();
+        const string AckMetarKey = "ackMetarUtc";
+        const string AckTafKey = "ackTafUtc";
         [Inject] private IJSRuntime JSRuntime { get; set; }
         [Inject] private AirportController airportController { get; set; }
 
@@ -34,6 +38,7 @@ namespace MetarTaf.Components.Pages
             if (firstRender && !isInitialized)
             {
                 await LoadAirportsFromLocalStorage();
+                await LoadAcksAsync();
                 isInitialized = true;
                 StateHasChanged();
             }
@@ -159,22 +164,96 @@ namespace MetarTaf.Components.Pages
             public string Icao { get; set; } = string.Empty;
         }
 
-        public void ConfirmReports(IAirport airport)
+        public async Task ConfirmReports(IAirport airport)
         {
-            airport.setMetarIsNew(false);
-            airport.setTafIsNew(false);
+            var icao = airport.getAirportInfo().icaoId;
+
+            var latestMetar = airport.getMetars().OrderByDescending(m => m.Key).FirstOrDefault().Value;
+            var latestTaf = airport.getTafs().OrderByDescending(t => t.Key).FirstOrDefault().Value;
+
+            var nowUtc = DateTime.UtcNow;
+
+            if (latestMetar != null)
+            {
+                var norm = TimeNormalizer.NormalizeIssueTimeUtc(
+                    DateTime.SpecifyKind(latestMetar.reportTime, DateTimeKind.Utc),
+                    DateTime.SpecifyKind(latestMetar.fetchTime, DateTimeKind.Utc),
+                    nowUtc,
+                    tolerance: TimeSpan.FromMinutes(10));
+                ack.AckMetar(icao, norm);
+            }
+
+            if (latestTaf != null)
+            {
+                var norm = TimeNormalizer.NormalizeIssueTimeUtc(
+                    DateTime.SpecifyKind(latestTaf.reportTime, DateTimeKind.Utc),
+                    DateTime.SpecifyKind(latestTaf.fetchTime, DateTimeKind.Utc),
+                    nowUtc,
+                    tolerance: TimeSpan.FromMinutes(10));
+                ack.AckTaf(icao, norm);
+            }
+
+            lastAcknowledgeTime = nowUtc;
+            await SaveAcksAsync();
             StateHasChanged();
         }
 
-        public void ConfirmAllReports()
+        public async Task ConfirmAllReports()
         {
+            var nowUtc = DateTime.UtcNow;
+
             foreach (var airport in airports)
             {
-                airport.setMetarIsNew(false);
-                airport.setTafIsNew(false);
+                var icao = airport.getAirportInfo().icaoId;
+
+                var latestMetar = airport.getMetars().OrderByDescending(m => m.Key).FirstOrDefault().Value;
+                if (latestMetar != null)
+                {
+                    var norm = TimeNormalizer.NormalizeIssueTimeUtc(
+                        DateTime.SpecifyKind(latestMetar.reportTime, DateTimeKind.Utc),
+                        DateTime.SpecifyKind(latestMetar.fetchTime, DateTimeKind.Utc),
+                        nowUtc,
+                        tolerance: TimeSpan.FromMinutes(10));
+                    ack.AckMetar(icao, norm);
+                }
+
+                var latestTaf = airport.getTafs().OrderByDescending(t => t.Key).FirstOrDefault().Value;
+                if (latestTaf != null)
+                {
+                    var norm = TimeNormalizer.NormalizeIssueTimeUtc(
+                        DateTime.SpecifyKind(latestTaf.reportTime, DateTimeKind.Utc),
+                        DateTime.SpecifyKind(latestTaf.fetchTime, DateTimeKind.Utc),
+                        nowUtc,
+                        tolerance: TimeSpan.FromMinutes(10));
+                    ack.AckTaf(icao, norm);
+                }
             }
-            lastAcknowledgeTime = DateTime.MinValue;
+
+            lastAcknowledgeTime = nowUtc;
+            await SaveAcksAsync();
             StateHasChanged();
+        }
+
+        private async Task LoadAcksAsync()
+        {
+            var mJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", AckMetarKey);
+            var tJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", AckTafKey);
+
+            var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var m = string.IsNullOrEmpty(mJson) ? null : JsonSerializer.Deserialize<Dictionary<string, DateTime>>(mJson, opts);
+            var t = string.IsNullOrEmpty(tJson) ? null : JsonSerializer.Deserialize<Dictionary<string, DateTime>>(tJson, opts);
+
+            ack.Load(m, t);
+        }
+
+        private Task SaveAcksAsync()
+        {
+            var m = JsonSerializer.Serialize(ack.SnapshotMetar());
+            var t = JsonSerializer.Serialize(ack.SnapshotTaf());
+            return Task.WhenAll(
+                JSRuntime.InvokeVoidAsync("localStorage.setItem", AckMetarKey, m).AsTask(),
+                JSRuntime.InvokeVoidAsync("localStorage.setItem", AckTafKey, t).AsTask()
+            );
         }
 
         public void Dispose()

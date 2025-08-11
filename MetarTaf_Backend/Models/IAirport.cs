@@ -20,10 +20,5 @@ namespace MetarTaf_Backend.Models
         Dictionary<DateTime, MetarReport> getMetars();
         Dictionary<DateTime, TafReport> getTafs();
 
-        void setMetarIsNew(bool isNew);
-        void setTafIsNew(bool isNew);
-
-        bool getIsNewMetar();
-        bool getIsNewTaf();
     }
 }

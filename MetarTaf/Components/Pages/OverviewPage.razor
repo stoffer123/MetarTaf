@@ -86,6 +86,13 @@
         lastTafFetch = nowUtc;
     }
 
+    var icao = airport.getAirportInfo().icaoId;
+
+    // metarTime/tafTime er allerede normaliseret UTC
+    bool metarIsNewForUser = latestMetar != null && ack.IsMetarNew(icao, metarTime);
+    bool tafIsNewForUser = latestTaf != null && ack.IsTafNew(icao, tafTime);
+
+
 
     <div>
         <table class="table-parent">
@@ -122,16 +129,16 @@
 
                     @if (latestTaf != null)
                     {
-                        <td class="report-type-cell @((airport.getIsNewTaf() && showNewTaf ? "taf-new-report" : "taf-old-report"))">
+                        <td class="report-type-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             TAF
                         </td>
-                        <td class="reports-time-cell @((airport.getIsNewTaf() && showNewTaf ? "taf-new-report" : "taf-old-report"))">
+                        <td class="reports-time-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             @tafTime.ToString("HH:mm") (@timeSinceLastTAF.ToString(@"hh\:mm"))
                         </td>
-                        <td class="reports-time-cell @((airport.getIsNewTaf() && showNewTaf ? "taf-new-report" : "taf-old-report"))">
+                        <td class="reports-time-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             @lastTafFetch.ToString("HH:mm") (@tafTimeDifference.ToString(@"hh\:mm"))
                         </td>
-                        <td class="@((airport.getIsNewTaf() && showNewTaf ? "taf-new-report" : "taf-old-report"))">
+                        <td class="@((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             @latestTaf.decodedTaf?.RawTaf
                         </td>
                     }
@@ -147,16 +154,16 @@
                 <tr>
                     @if (latestMetar != null)
                     {
-                        <td class="report-type-cell @((airport.getIsNewMetar() && showNewMetar ? "metar-new-report" : "metar-old-report"))">
+                        <td class="report-type-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             METAR
                         </td>
-                        <td class="reports-time-cell @((airport.getIsNewMetar() && showNewMetar ? "metar-new-report" : "metar-old-report"))">
+                        <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             @metarTime.ToString("HH:mm") (@timeSinceLastMetar.ToString(@"hh\:mm"))
                         </td>
-                        <td class="reports-time-cell @((airport.getIsNewMetar() && showNewMetar ? "metar-new-report" : "metar-old-report"))">
+                        <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             @lastMetarFetch.ToString("HH:mm") (@metarTimeDifference.ToString(@"hh\:mm"))
                         </td>
-                        <td class="@((airport.getIsNewMetar() && showNewMetar ? "metar-new-report" : "metar-old-report"))">
+                        <td class="@((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             @latestMetar.decodedMetar?.RawMetar
                         </td>
                     }

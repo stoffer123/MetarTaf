@@ -16,8 +16,7 @@ namespace MetarTaf_Backend.Models
         public string icao { get; }
         private int referenceCount;
 
-        public bool metarIsNew { get; set; }
-        public bool tafIsNew { get; set; }
+        public event Action? Updated;
 
 
         public Airport(IInfoStation infoStation, AirportInfo airportInfo)
@@ -28,8 +27,6 @@ namespace MetarTaf_Backend.Models
             tafs = new Dictionary<DateTime, TafReport>();
             icao = airportInfo.icaoId;
             referenceCount = 1;
-            metarIsNew = false;
-            tafIsNew = false;
 
             updateMetars();
             updateTafs();
@@ -40,35 +37,27 @@ namespace MetarTaf_Backend.Models
         {
             throw new NotImplementedException();
         }
-        
+
         public void updateMetars()
         {
-            Dictionary<DateTime, MetarReport> newMetars = infoStation.getMetars(icao);
+            var newMetars = infoStation.getMetars(icao);
+            var added = false;
+            foreach (var kvp in newMetars)
+                if (metars.TryAdd(kvp.Key, kvp.Value))
+                    added = true;
 
-            foreach (KeyValuePair<DateTime, MetarReport> kvp in newMetars)
-            {
-                MetarReport newMetar = kvp.Value;
-
-                if(metars.TryAdd(kvp.Key, newMetar))
-                {
-                    metarIsNew = true;
-                }
-            }
+            if (added) Updated?.Invoke();
         }
 
         public void updateTafs()
         {
-            Dictionary<DateTime, TafReport> newTafs = infoStation.getTafs(icao);
+            var newTafs = infoStation.getTafs(icao);
+            var added = false;
+            foreach (var kvp in newTafs)
+                if (tafs.TryAdd(kvp.Key, kvp.Value))
+                    added = true;
 
-            foreach (KeyValuePair<DateTime, TafReport> kvp in newTafs)
-            {
-                TafReport newTaf = kvp.Value;
-
-                if (tafs.TryAdd(kvp.Key, newTaf))
-                {
-                    tafIsNew = true;
-                }
-            }
+            if (added) Updated?.Invoke();
         }
 
         public void incrementReferenceCount()
@@ -101,24 +90,6 @@ namespace MetarTaf_Backend.Models
             return tafs;
         }
 
-        public void setMetarIsNew(bool isNew)
-        {
-            metarIsNew = isNew;
-        }
 
-        public void setTafIsNew(bool isNew)
-        {
-            tafIsNew = isNew;
-        }
-
-        public bool getIsNewMetar()
-        {
-            return metarIsNew;
-        }
-
-        public bool getIsNewTaf()
-        {
-            return tafIsNew;
-        }
     }
 }
