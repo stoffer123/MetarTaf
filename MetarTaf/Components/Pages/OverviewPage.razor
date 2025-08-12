@@ -45,7 +45,8 @@
     // METAR
     MetarReport latestMetar = airport.getMetars().OrderByDescending(m => m.Key).FirstOrDefault().Value;
     DateTime metarTime, lastMetarFetch;
-    TimeSpan timeSinceLastMetar = TimeSpan.Zero, metarTimeDifference = TimeSpan.Zero;
+    TimeSpan timeSinceLastMetar = TimeSpan.Zero;
+    TimeSpan metarTimeDifference = TimeSpan.Zero;
 
     if (latestMetar != null)
     {
@@ -56,7 +57,9 @@
         lastMetarFetch = rawFetch;
 
         timeSinceLastMetar = SafeAge(nowUtc, metarTime);
-        metarTimeDifference = lastMetarFetch - metarTime; // kan være lille negativ før “officiel” tid
+		var diff = lastMetarFetch - metarTime;
+        metarTimeDifference = diff < TimeSpan.Zero && diff > -TimeSpan.FromMinutes(10) ?
+			TimeSpan.Zero : diff; // Ensure no negative time difference
     }
     else
     {
@@ -67,7 +70,8 @@
     // TAF
     TafReport latestTaf = airport.getTafs().OrderByDescending(t => t.Key).FirstOrDefault().Value;
     DateTime tafTime, lastTafFetch;
-    TimeSpan timeSinceLastTAF = TimeSpan.Zero, tafTimeDifference = TimeSpan.Zero;
+    TimeSpan timeSinceLastTAF = TimeSpan.Zero;
+    TimeSpan tafTimeDifference = TimeSpan.Zero;
 
     if (latestTaf != null)
     {
@@ -78,7 +82,9 @@
         lastTafFetch = rawFetch;
 
         timeSinceLastTAF = SafeAge(nowUtc, tafTime);
-        tafTimeDifference = lastTafFetch - tafTime;
+		var diff = lastTafFetch - tafTime;
+        tafTimeDifference = diff < TimeSpan.Zero && diff > -TimeSpan.FromMinutes(10) ?
+            TimeSpan.Zero : diff; // Ensure no negative time difference
     }
     else
     {
