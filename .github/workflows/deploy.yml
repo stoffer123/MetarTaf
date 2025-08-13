@@ -30,6 +30,7 @@ jobs:
 
   deploy:
     needs: build-push
+    permissions: {}
     runs-on: ubuntu-latest
     steps:
       - name: Deploy over SSH
