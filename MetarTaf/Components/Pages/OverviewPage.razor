@@ -107,8 +107,7 @@
                     <th></th>
                     <th>Station</th>
                     <th>Report type</th>
-                    <th>Report time</th>
-                    <th>Fetch Time</th>
+                    <th>Report time(age)</th>
                     <th>Raw report</th>
                 </tr>
             </thead>
@@ -141,18 +140,14 @@
                         <td class="reports-time-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             @tafTime.ToString("HH:mm") (@timeSinceLastTAF.ToString(@"hh\:mm"))
                         </td>
-                        <td class="reports-time-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
-                            @lastTafFetch.ToString("HH:mm") (@tafTimeDifference.ToString(@"hh\:mm"))
-                        </td>
                         <td class="@((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             @latestTaf.decodedTaf?.RawTaf
                         </td>
                     }
                     else
                     {
-                        <td class="report-type-cell">TAF</td>
-                        <td class="reports-time-cell">NO TAF</td>
-                        <td class="reports-time-cell">NO TAF</td>
+                        <td class="taf-old-report">TAF</td>
+                        <td class="taf-old-report">NO TAF</td>
                         <td class="taf-old-report">NO TAF</td>
                     }
                 </tr>
@@ -166,18 +161,14 @@
                         <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             @metarTime.ToString("HH:mm") (@timeSinceLastMetar.ToString(@"hh\:mm"))
                         </td>
-                        <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
-                            @lastMetarFetch.ToString("HH:mm") (@metarTimeDifference.ToString(@"hh\:mm"))
-                        </td>
                         <td class="@((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             @latestMetar.decodedMetar?.RawMetar
                         </td>
                     }
                     else
                     {
-                        <td class="report-type-cell">METAR</td>
-                        <td class="reports-time-cell">NO METAR</td>
-                        <td class="reports-time-cell">NO METAR</td>
+                        <td class="metar-old-report">METAR</td>
+                        <td class="metar-old-report">NO METAR</td>
                         <td class="metar-old-report">NO METAR</td>
                     }
                 </tr>
