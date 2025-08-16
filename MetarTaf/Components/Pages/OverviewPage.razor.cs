@@ -199,7 +199,7 @@ namespace MetarTaf.Components.Pages
                 ack.AckTaf(icao, norm);
             }
 
-            lastAcknowledgeTime = nowUtc;
+            lastAcknowledgeTime = DateTime.MinValue;
             await SaveAcksAsync();
             StateHasChanged();
         }
@@ -235,7 +235,7 @@ namespace MetarTaf.Components.Pages
                 }
             }
 
-            lastAcknowledgeTime = nowUtc;
+            lastAcknowledgeTime = DateTime.MinValue;
             await SaveAcksAsync();
             StateHasChanged();
         }
