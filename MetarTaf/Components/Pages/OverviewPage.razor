@@ -40,63 +40,57 @@
 
 @foreach (var airport in airports)
 {
-    var nowUtc = currentTime; // du bruger allerede UTC
+    DateTime nowUtc = currentTime; // du bruger allerede UTC
+	TimeSpan nowClock = nowUtc.TimeOfDay;
 
     // METAR
     MetarReport latestMetar = airport.getMetars().OrderByDescending(m => m.Key).FirstOrDefault().Value;
-    DateTime metarTime, lastMetarFetch;
-    TimeSpan timeSinceLastMetar = TimeSpan.Zero;
-    TimeSpan metarTimeDifference = TimeSpan.Zero;
+    DateTime metarReportUtc;
+    DateTime metarFetchUtc;
+    TimeSpan metarReportAge = TimeSpan.Zero;
+    TimeSpan metarFetchDiff = TimeSpan.Zero;
 
     if (latestMetar != null)
     {
-        var rawReport = DateTime.SpecifyKind(latestMetar.reportTime, DateTimeKind.Utc);
-        var rawFetch = DateTime.SpecifyKind(latestMetar.fetchTime, DateTimeKind.Utc);
+        metarReportUtc = DateTime.SpecifyKind(latestMetar.reportTime, DateTimeKind.Utc);
+        metarFetchUtc = DateTime.SpecifyKind(latestMetar.fetchTime, DateTimeKind.Utc);
+        metarReportAge = nowClock - metarReportUtc.TimeOfDay;
+        metarFetchDiff = metarFetchUtc.TimeOfDay - metarReportUtc.TimeOfDay; // kan være negativ (hentet før “officiel” tid)
 
-        metarTime = TimeNormalizer.NormalizeIssueTimeUtc(rawReport, rawFetch, nowUtc, tolerance: TimeSpan.FromMinutes(10));
-        lastMetarFetch = rawFetch;
-
-        timeSinceLastMetar = SafeAge(nowUtc, metarTime);
-		var diff = lastMetarFetch - metarTime;
-        metarTimeDifference = diff < TimeSpan.Zero && diff > -TimeSpan.FromMinutes(10) ?
-			TimeSpan.Zero : diff; // Ensure no negative time difference
     }
     else
     {
-        metarTime = nowUtc;
-        lastMetarFetch = nowUtc;
+        metarReportUtc = DateTime.MinValue; // eller en anden passende værdi
+        metarFetchUtc = DateTime.MinValue; // eller en anden passende værdi
     }
 
     // TAF
     TafReport latestTaf = airport.getTafs().OrderByDescending(t => t.Key).FirstOrDefault().Value;
-    DateTime tafTime, lastTafFetch;
-    TimeSpan timeSinceLastTAF = TimeSpan.Zero;
-    TimeSpan tafTimeDifference = TimeSpan.Zero;
+    DateTime tafReportUtc;
+    DateTime tafFetchUtc;
+    TimeSpan tafReportAge = TimeSpan.Zero;
+    TimeSpan tafFetchDiff = TimeSpan.Zero;
 
     if (latestTaf != null)
     {
-        var rawReport = DateTime.SpecifyKind(latestTaf.reportTime, DateTimeKind.Utc);
-        var rawFetch = DateTime.SpecifyKind(latestTaf.fetchTime, DateTimeKind.Utc);
+        tafReportUtc = DateTime.SpecifyKind(latestTaf.reportTime, DateTimeKind.Utc);
+        tafFetchUtc = DateTime.SpecifyKind(latestTaf.fetchTime, DateTimeKind.Utc);
 
-        tafTime = TimeNormalizer.NormalizeIssueTimeUtc(rawReport, rawFetch, nowUtc, tolerance: TimeSpan.FromMinutes(10));
-        lastTafFetch = rawFetch;
-
-        timeSinceLastTAF = SafeAge(nowUtc, tafTime);
-		var diff = lastTafFetch - tafTime;
-        tafTimeDifference = diff < TimeSpan.Zero && diff > -TimeSpan.FromMinutes(10) ?
-            TimeSpan.Zero : diff; // Ensure no negative time difference
+        tafReportAge = nowClock - tafReportUtc.TimeOfDay;
+        tafFetchDiff = tafFetchUtc.TimeOfDay - tafReportUtc.TimeOfDay;
+        
     }
     else
     {
-        tafTime = nowUtc;
-        lastTafFetch = nowUtc;
+		tafReportUtc = DateTime.MinValue; // eller en anden passende værdi
+		tafFetchUtc = DateTime.MinValue; // eller en anden passende værdi
     }
 
     var icao = airport.getAirportInfo().icaoId;
 
     // metarTime/tafTime er allerede normaliseret UTC
-    bool metarIsNewForUser = latestMetar != null && ack.IsMetarNew(icao, metarTime);
-    bool tafIsNewForUser = latestTaf != null && ack.IsTafNew(icao, tafTime);
+    bool metarIsNewForUser = latestMetar != null && ack.IsMetarNew(icao, metarReportUtc);
+    bool tafIsNewForUser = latestTaf != null && ack.IsTafNew(icao, tafReportUtc);
 
 
 
@@ -108,6 +102,7 @@
                     <th>Station</th>
                     <th>Report type</th>
                     <th>Report time(age)</th>
+                    <th>Fetch time(age)</th>
                     <th>Raw report</th>
                 </tr>
             </thead>
@@ -138,7 +133,10 @@
                             TAF
                         </td>
                         <td class="reports-time-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
-                            @tafTime.ToString("HH:mm") (@timeSinceLastTAF.ToString(@"hh\:mm"))
+                            @tafReportUtc.ToString("HH:mm") (@FormatTimeDiff(tafReportAge))
+                        </td>
+                        <td class="reports-time-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
+                            @tafFetchUtc.ToString("HH:mm") (@FormatTimeDiff(tafFetchDiff))
                         </td>
                         <td class="@((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
                             @latestTaf.decodedTaf?.RawTaf
@@ -147,6 +145,7 @@
                     else
                     {
                         <td class="taf-old-report">TAF</td>
+                        <td class="taf-old-report">NO TAF</td>
                         <td class="taf-old-report">NO TAF</td>
                         <td class="taf-old-report">NO TAF</td>
                     }
@@ -159,7 +158,10 @@
                             METAR
                         </td>
                         <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
-                            @metarTime.ToString("HH:mm") (@timeSinceLastMetar.ToString(@"hh\:mm"))
+                            @metarReportUtc.ToString("HH:mm") (@FormatTimeDiff(metarReportAge))
+                        </td>
+                        <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
+                            @metarFetchUtc.ToString("HH:mm") (@FormatTimeDiff(metarFetchDiff))
                         </td>
                         <td class="@((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             @latestMetar.decodedMetar?.RawMetar
@@ -168,6 +170,7 @@
                     else
                     {
                         <td class="metar-old-report">METAR</td>
+                        <td class="metar-old-report">NO METAR</td>
                         <td class="metar-old-report">NO METAR</td>
                         <td class="metar-old-report">NO METAR</td>
                     }

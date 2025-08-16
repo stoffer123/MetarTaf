@@ -46,13 +46,6 @@ namespace MetarTaf.Components.Pages
             }
         }
 
-        private static TimeSpan SafeAge(DateTime nowUtc, DateTime reportUtc)
-        {
-            var age = nowUtc - reportUtc;
-            return age < TimeSpan.Zero ? TimeSpan.Zero : age;
-        }
-
-
         private void UpdateCurrentTime(object? state)
         {
             currentTime = DateTime.UtcNow;
@@ -148,6 +141,7 @@ namespace MetarTaf.Components.Pages
 
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", AirportsStorageKey, JsonSerializer.Serialize(icaoList));
         }
+
         private async Task LoadAirportsFromLocalStorage()
         {
             var icaoListJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", AirportsStorageKey);
@@ -287,6 +281,15 @@ namespace MetarTaf.Components.Pages
             if (_subscribed.Remove(icao))
                 ap.Updated -= OnAirportUpdated;
         }
+
+        private static string FormatTimeDiff(TimeSpan ts)
+        {
+            if (ts < TimeSpan.Zero)
+                return "-" + ts.Duration().ToString(@"hh\:mm");
+            else
+                return ts.ToString(@"hh\:mm");
+        }
+
 
         public void Dispose()
         {
