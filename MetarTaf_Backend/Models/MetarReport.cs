@@ -15,6 +15,7 @@ namespace MetarTaf_Backend.Models
         {
             this.decodedMetar = decodedMetar;
             base.reportTime = base.createReportTime(decodedMetar.Day.Value, decodedMetar.Time);
+            base.reportClock = base.CreateReportTimeSpan(decodedMetar.Day.Value, decodedMetar.Time);
             base.fetchTime = DateTime.UtcNow;
         }
     }

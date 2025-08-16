@@ -9,8 +9,9 @@ namespace MetarTaf_Backend.Models
 {
     public abstract class Report
     {
-        public DateTime reportTime { get; set; }
-        public DateTime fetchTime { get; set; }
+        public DateTime reportTime { get; protected set; }
+        public DateTime fetchTime { get; protected set; }
+        public TimeSpan reportClock { get; protected set; }
 
         protected DateTime createReportTime(int day, string time)
         {
@@ -28,5 +29,19 @@ namespace MetarTaf_Backend.Models
 
             return parsedDateTime;
         }
+
+        protected TimeSpan CreateReportTimeSpan(int day, string time)
+        {
+            // Fjern evt. Z og kolon
+            var clean = time.Trim().TrimEnd('Z');
+            if (clean.Contains(":") == false && clean.Length == 4)
+                clean = clean.Insert(2, ":"); // fx "1230" -> "12:30"
+
+            if (TimeSpan.TryParseExact(clean, "hh\\:mm", CultureInfo.InvariantCulture, out var ts))
+                return ts;
+
+            return TimeSpan.Zero;
+        }
+
     }
 }
