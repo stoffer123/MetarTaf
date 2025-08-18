@@ -70,12 +70,13 @@
     DateTime tafFetchUtc;
     TimeSpan tafReportAge = TimeSpan.Zero;
     TimeSpan tafFetchDiff = TimeSpan.Zero;
+	bool tafIsAmd = false; // TAF AMD flag
 
     if (latestTaf != null)
     {
         tafReportUtc = DateTime.SpecifyKind(latestTaf.reportTime, DateTimeKind.Utc);
         tafFetchUtc = DateTime.SpecifyKind(latestTaf.fetchTime, DateTimeKind.Utc);
-
+		tafIsAmd = latestTaf.decodedTaf.Type == DecodedTaf.TafType.TAFAMD;
         tafReportAge = nowClock - tafReportUtc.TimeOfDay;
         tafFetchDiff = tafFetchUtc.TimeOfDay - tafReportUtc.TimeOfDay;
         
@@ -107,49 +108,43 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                @{
+                    // afgør class til TAF-rækken
+                    var tafRowClass =
+                    (latestTaf != null && tafIsNewForUser && showNewTaf)
+                    ? (tafIsAmd ? "blink-red" : "taf-new-report")
+                    : "taf-old-report";
+                }
+
+                <tr class="@tafRowClass">
                     <td class="actions-cell" rowspan="2">
-                        <button @onclick="() => ConfirmReports(airport)" title="Confirm reports">
-                            ✔️
-                        </button>
-                        <button @onclick="() => RemoveAirport(airport.getAirportInfo().icaoId)" title="Remove airport">
-                            ❌
-                        </button>
+                        <button @onclick="() => ConfirmReports(airport)" title="Confirm reports">✔️</button>
+                        <button @onclick="() => RemoveAirport(airport.getAirportInfo().icaoId)" title="Remove airport">❌</button>
                     </td>
+
                     <td class="station-cell" rowspan="2" @onclick="() => NavigateToAirportPage(airport.getAirportInfo().icaoId)">
-                        <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
-                            <div>
-                                @airport.getAirportInfo().icaoId
-                            </div>
-                            <div class="station-city">
-                                @airport.getAirportInfo().country
-                            </div>
+                        <div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;">
+                            <div>@airport.getAirportInfo().icaoId</div>
+                            <div class="station-city">@airport.getAirportInfo().country</div>
                         </div>
                     </td>
 
                     @if (latestTaf != null)
                     {
-                        <td class="report-type-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
-                            TAF
-                        </td>
-                        <td class="reports-time-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
-                            @tafReportUtc.ToString("HH:mm") (@FormatTimeDiff(tafReportAge))
-                        </td>
-                        <td class="reports-time-cell @((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
-                            @tafFetchUtc.ToString("HH:mm") (@FormatTimeDiff(tafFetchDiff))
-                        </td>
-                        <td class="@((tafIsNewForUser && showNewTaf ? "taf-new-report" : "taf-old-report"))">
-                            @latestTaf.decodedTaf?.RawTaf
-                        </td>
+                        <td>TAF</td>
+                        <td>@tafReportUtc.ToString("HH:mm") (@FormatTimeDiff(tafReportAge))</td>
+                        <td>@tafFetchUtc.ToString("HH:mm") (@FormatTimeDiff(tafFetchDiff))</td>
+                        <td>@latestTaf.decodedTaf?.RawTaf</td>
                     }
                     else
                     {
-                        <td class="taf-old-report">TAF</td>
-                        <td class="taf-old-report">NO TAF</td>
-                        <td class="taf-old-report">NO TAF</td>
-                        <td class="taf-old-report">NO TAF</td>
+                        <td>TAF</td>
+                        <td>NO TAF</td>
+                        <td>NO TAF</td>
+                        <td>NO TAF</td>
                     }
                 </tr>
+
 
                 <tr>
                     @if (latestMetar != null)
