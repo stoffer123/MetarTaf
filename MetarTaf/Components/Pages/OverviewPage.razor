@@ -80,6 +80,7 @@
         tafReportAge = nowClock - tafReportUtc.TimeOfDay;
         tafFetchDiff = tafFetchUtc.TimeOfDay - tafReportUtc.TimeOfDay;
         
+
     }
     else
     {
@@ -89,10 +90,27 @@
 
     var icao = airport.getAirportInfo().icaoId;
 
-    // metarTime/tafTime er allerede normaliseret UTC
-    bool metarIsNewForUser = latestMetar != null && ack.IsMetarNew(icao, metarReportUtc);
-    bool tafIsNewForUser = latestTaf != null && ack.IsTafNew(icao, tafReportUtc);
+    var tol = TimeSpan.FromMinutes(10);
 
+    // Brug samme normalisering som i ConfirmReports
+    var normMetarForAck = latestMetar != null
+        ? TimeNormalizer.NormalizeIssueTimeUtc(metarReportUtc, metarFetchUtc, nowUtc, tol)
+        : DateTime.MinValue;
+
+    var normTafForAck = latestTaf != null
+        ? TimeNormalizer.NormalizeIssueTimeUtc(tafReportUtc, tafFetchUtc, nowUtc, tol)
+        : DateTime.MinValue;
+
+    // metarTime/tafTime er allerede normaliseret UTC
+    bool metarIsNewForUser = latestMetar != null && ack.IsMetarNew(icao, normMetarForAck);
+    bool tafIsNewForUser = latestTaf != null && ack.IsTafNew(icao, normTafForAck);
+
+
+    @if (latestTaf != null && tafIsNewForUser && tafIsAmd)
+    {
+        // trig lyd (en gang per render)
+        _ = JSRuntime.InvokeVoidAsync("playAmdAlert");
+    }
 
 
     <div>

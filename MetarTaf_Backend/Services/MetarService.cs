@@ -40,9 +40,7 @@ namespace MetarTaf_Backend.Services
 
                     try
                     {
-                        var metar = metarFactory.createMetar(metarLine.StartsWith("METAR ") ?
-                            metarLine : "METAR " + metarLine
-                            );
+                        var metar = metarFactory.createMetar(metarLine);
 
                         var icao = metar.decodedMetar.ICAO;
                         var reportTime = metar.reportTime;
