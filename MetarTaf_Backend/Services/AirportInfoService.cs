@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -82,6 +83,9 @@ namespace MetarTaf_Backend.Services
 
             List<AirportInfo> tempList = DeserializeAirports(fileContent);
 
+            //create test info
+            createTestInfo();
+
             foreach (AirportInfo temp in tempList)
             {
                 if(temp.icaoId != null)
@@ -114,6 +118,22 @@ namespace MetarTaf_Backend.Services
                 Console.WriteLine($"Error deserializing JSON: {ex.Message}");
                 return new List<AirportInfo>();
             }
+        }
+
+        private static void createTestInfo()
+        {
+                       // Create a test AirportInfo object
+            AirportInfo testAirport = new AirportInfo
+            {
+                icaoId = "TEST",
+                country = "Test Country",
+                lat = 00.00,
+                lon = 00.00,
+                elev = 0000
+            };
+            // Add the test airport to the dictionary
+            airportInfos[testAirport.icaoId] = testAirport;
+            Console.WriteLine($"Test airport {testAirport.icaoId} created.");
         }
     }
 }

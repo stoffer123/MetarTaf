@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace MetarTaf_Backend.Services
 {
-    public sealed class NorthAviMetFetcher
+    public sealed class NorthAviMetFetcher : IOpmetFetcher
     {
         private readonly HttpClient _http;
         public NorthAviMetFetcher(HttpClient http)

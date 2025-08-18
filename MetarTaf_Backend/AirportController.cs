@@ -20,7 +20,7 @@ namespace MetarTaf_Backend
         private readonly object timerLock = new();
         private readonly int timerDelayMinutes;
 
-        public AirportController(NorthAviMetFetcher fetcher, int timerDelayMinutes = 1)
+        public AirportController(IOpmetFetcher fetcher, int timerDelayMinutes = 1)
         {
             this.timerDelayMinutes = timerDelayMinutes;
 
@@ -28,6 +28,7 @@ namespace MetarTaf_Backend
             airportFactory = new AirportFactory(infoStation);
 
             InitializeFetchTimer();
+
         }
 
         private void InitializeFetchTimer()
@@ -109,6 +110,8 @@ namespace MetarTaf_Backend
                 }
             }
         }
+
+
 
         public List<string> getAirportIcaoList() => airports.Keys.ToList();
     }
