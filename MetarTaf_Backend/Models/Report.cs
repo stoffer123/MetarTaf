@@ -12,6 +12,7 @@ namespace MetarTaf_Backend.Models
         public DateTime reportTime { get; protected set; }
         public DateTime fetchTime { get; protected set; }
         public TimeSpan reportClock { get; protected set; }
+        public abstract string typeString { get; protected set; }
 
         protected DateTime createReportTime(int day, string time)
         {

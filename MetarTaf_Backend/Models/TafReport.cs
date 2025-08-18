@@ -10,7 +10,7 @@ namespace MetarTaf_Backend.Models
     public class TafReport : Report
     {
         public DecodedTaf decodedTaf { get; set; }
-        public string typeString { get; protected set; } = "TAF";
+        public override string typeString { get; protected set; }
         public TafReport(DecodedTaf decodedTaf)
         {
             this.decodedTaf = decodedTaf;

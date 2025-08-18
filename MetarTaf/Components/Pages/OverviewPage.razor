@@ -150,7 +150,7 @@
                     @if (latestMetar != null)
                     {
                         <td class="report-type-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
-                            METAR
+                            @latestMetar.typeString
                         </td>
                         <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
                             @metarReportUtc.ToString("HH:mm") (@FormatTimeDiff(metarReportAge))
