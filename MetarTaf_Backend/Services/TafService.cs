@@ -11,9 +11,9 @@ namespace MetarTaf_Backend.Services
         private readonly TafFactory tafFactory = new();
         private readonly IInfoStation infoStation;
         private readonly AirportController airportController;
-        private readonly NorthAviMetFetcher fetcher;
+        private readonly IOpmetFetcher fetcher;
 
-        public TafService(IInfoStation infostation, AirportController airportController, NorthAviMetFetcher fetcher)
+        public TafService(IInfoStation infostation, AirportController airportController, IOpmetFetcher fetcher)
         {
             this.infoStation = infostation;
             this.airportController = airportController;

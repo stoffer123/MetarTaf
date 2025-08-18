@@ -10,9 +10,9 @@ namespace MetarTaf_Backend.Services
         private readonly MetarFactory metarFactory = new();
         private readonly IInfoStation infoStation;
         private readonly AirportController airportController;
-        private readonly NorthAviMetFetcher fetcher;
+        private readonly IOpmetFetcher fetcher;
 
-        public MetarService(IInfoStation infostation, AirportController airportController, NorthAviMetFetcher fetcher)
+        public MetarService(IInfoStation infostation, AirportController airportController, IOpmetFetcher fetcher)
         {
             this.infoStation = infostation;
             this.airportController = airportController;
@@ -40,9 +40,7 @@ namespace MetarTaf_Backend.Services
 
                     try
                     {
-                        var metar = metarFactory.createMetar(metarLine.StartsWith("METAR ") ?
-                            metarLine : "METAR " + metarLine
-                            );
+                        var metar = metarFactory.createMetar(metarLine);
 
                         var icao = metar.decodedMetar.ICAO;
                         var reportTime = metar.reportTime;

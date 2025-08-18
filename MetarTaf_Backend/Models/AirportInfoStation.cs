@@ -17,7 +17,7 @@ namespace MetarTaf_Backend.Models
         // Sikrer at kun en fetch kan kører ad gangen
         private readonly SemaphoreSlim _fetchGate = new(1, 1);
 
-        public AirportInfoStation(AirportController airportController, NorthAviMetFetcher fetcher)
+        public AirportInfoStation(AirportController airportController, IOpmetFetcher fetcher)
         {
             this.airportController = airportController;
             observers = new List<IAirport>();

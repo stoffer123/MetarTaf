@@ -6,6 +6,8 @@ using System.Net;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1) Registrér typed HttpClient til fetcheren (før AirportController)
+// Program.cs
+
 builder.Services.AddHttpClient<NorthAviMetFetcher>(c =>
 {
     c.Timeout = TimeSpan.FromSeconds(20);
@@ -17,10 +19,23 @@ builder.Services.AddHttpClient<NorthAviMetFetcher>(c =>
                              DecompressionMethods.Brotli
 });
 
+// Test-kilden
+builder.Services.AddSingleton<TestOpmetSource>();
+
+// IMPORTANT: Bind IOpmetFetcher til COMPOSITE (ikke NorthAviMetFetcher)
+builder.Services.AddSingleton<IOpmetFetcher>(sp =>
+    new CompositeOpmetFetcher(
+        sp.GetRequiredService<NorthAviMetFetcher>(),
+        sp.GetRequiredService<TestOpmetSource>()
+    )
+);
+
+
+
 // 2) AirportController afhænger af fetcher
 builder.Services.AddSingleton<AirportController>(sp =>
 {
-    var fetcher = sp.GetRequiredService<NorthAviMetFetcher>();
+    var fetcher = sp.GetRequiredService<IOpmetFetcher>();
     return new AirportController(fetcher, timerDelayMinutes: 1);
 });
 
@@ -33,10 +48,11 @@ var app = builder.Build();
 // 4) Hvis AirportInfoService skal køre noget init der bruger DI, gør det EFTER Build()
 using (var scope = app.Services.CreateScope())
 {
-    // Hvis createAirportInfo ikke skal bruge DI, kan du bare kalde den uden scope
-    // Ellers resolve services sådan her:
-    // var controller = scope.ServiceProvider.GetRequiredService<AirportController>();
     await AirportInfoService.createAirportInfo();
+
+    var controller = scope.ServiceProvider.GetRequiredService<AirportController>();
+    // Sikr at TEST er tracket fra start
+    controller.getAirport("TEST");
 }
 
 // 5) Pipeline
