@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 namespace MetarTaf_Backend.Services
 {
     public sealed class CompositeOpmetFetcher : IOpmetFetcher
-    {
-        private readonly NorthAviMetFetcher _real;
+    {   
+        private readonly IOpmetFetcher _real;     // NorthAviMetFetcher
         private readonly TestOpmetSource _test;
 
-        public CompositeOpmetFetcher(NorthAviMetFetcher real, TestOpmetSource test)
+        public CompositeOpmetFetcher(IOpmetFetcher real, TestOpmetSource test)
         {
             _real = real;
             _test = test;
