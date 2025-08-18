@@ -131,7 +131,7 @@
 
                     @if (latestTaf != null)
                     {
-                        <td>TAF</td>
+                        <td>@latestTaf.typeString</td>
                         <td>@tafReportUtc.ToString("HH:mm") (@FormatTimeDiff(tafReportAge))</td>
                         <td>@tafFetchUtc.ToString("HH:mm") (@FormatTimeDiff(tafFetchDiff))</td>
                         <td>@latestTaf.decodedTaf?.RawTaf</td>
