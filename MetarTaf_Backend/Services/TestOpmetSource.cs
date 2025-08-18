@@ -1,56 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
-namespace MetarTaf_Backend.Services
+public sealed class TestOpmetSource
 {
-    public sealed class TestOpmetSource
+    // Roter over 4 scenarier for at skabe variation
+    private static readonly (string wind, string vis, string clouds, string temp)[] MetarSlots = new[]
     {
-        // Roterende eksempler — tilpas bare indholdet
-        private static readonly string[] _metars =
-        {
-        "METAR TEST 101946Z 18010KT 9999 FEW020 21/12 Q1018=",
-        "SPECI TEST 101948Z 22015G25KT 8000 -SHRA SCT015 20/12 Q1017=",
-        "METAR COR TEST 101950Z 20012KT CAVOK 21/11 Q1017=",
-        "SPECI COR TEST 101955Z 18018KT 9999 BKN030 20/11 Q1016="
+        ("21012KT", "9999", "FEW020", "18/12"),
+        ("18008KT", "8000", "SCT025", "17/11"),
+        ("24015G25KT", "9999", "BKN030", "16/10"),
+        ("VRB03KT", "CAVOK", "", "19/12"),
     };
 
-        private static readonly string[] _tafs =
-        {
-        "TAF TEST 1019/1024 20010KT CAVOK=",
-        "TAF AMD TEST 101915Z 1019/1024 22015G25KT 8000 SHRA SCT015 BKN030=",
-        "TAF COR TEST 101920Z 1019/1024 19012KT CAVOK=",
-        "TAF TEST 1020/1026 21012KT 9999 FEW020="
+    private static readonly string[] TafBodies = new[]
+    {
+        // rolig
+        "9999 SCT025",
+        // lidt byger
+        "8000 -SHRA SCT020 BKN030",
+        // blæst
+        "9999 24015G25KT SCT030",
+        // CAVOK
+        "CAVOK"
     };
 
-        private int _metarIdx = -1;
-        private int _tafIdx = -1;
+    /// <summary>
+    /// Returnér dynamisk METAR/TAF for TEST baseret på nuværende minut.
+    /// </summary>
+    public (Dictionary<string, string> Metar, Dictionary<string, string> Taf) GetFor(DateTime nowUtc, IEnumerable<string> icaos)
+    {
+        var wantTest = icaos.Any(x => string.Equals(x, "TEST", StringComparison.OrdinalIgnoreCase));
+        var metar = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var taf = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        private string Next(string[] arr, ref int idx)
-        {
-            var i = Interlocked.Increment(ref idx);
-            return arr[Math.Abs(i) % arr.Length];
-        }
-
-        public (Dictionary<string, string> Metar, Dictionary<string, string> Taf)
-            BuildFor(IEnumerable<string> icaos)
-        {
-            var metar = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var taf = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var raw in icaos)
-            {
-                var icao = raw.Trim().ToUpperInvariant();
-                if (icao == "TEST")
-                {
-                    metar[icao] = Next(_metars, ref _metarIdx);
-                    taf[icao] = Next(_tafs, ref _tafIdx);
-                }
-            }
-
+        if (!wantTest)
             return (metar, taf);
-        }
+
+        // Brug “minut-rotor” til at vælge slot og AMD/COR
+        var minute = (int)Math.Floor((nowUtc - DateTime.UnixEpoch).TotalMinutes);
+        var slot = minute % MetarSlots.Length;
+
+        // METAR tid: DDHHMMZ (UTC)
+        var dd = nowUtc.Day.ToString("00", CultureInfo.InvariantCulture);
+        var hhmm = nowUtc.ToString("HHmm", CultureInfo.InvariantCulture);
+        var metarTimeToken = $"{dd}{hhmm}Z";
+
+        var (wind, vis, clouds, temp) = MetarSlots[slot];
+        var cloudsPart = string.IsNullOrWhiteSpace(clouds) ? "" : $" {clouds}";
+
+        // Hver 2. minut laver vi en COR for at vise variation
+        var metarPrefix = (minute % 2 == 0) ? "METAR" : "METAR COR";
+
+        var qnh = "Q1015"; // fast for test
+        var metarLine = $"{metarPrefix} TEST {metarTimeToken} {wind} {vis}{cloudsPart} {temp} {qnh}=";
+        metar["TEST"] = metarLine.Trim();
+
+        // TAF: issue + gyldighed (24 timer)
+        var issue = metarTimeToken; // samme som metar-issue for simpelt showcase
+        var from = nowUtc.ToString("ddHH", CultureInfo.InvariantCulture);
+        var to = nowUtc.AddHours(24).ToString("ddHH", CultureInfo.InvariantCulture);
+        var tafCore = TafBodies[slot];
+
+        // Hver 3. minut laver vi AMD for at teste blink/lyd
+        var tafPrefix = (minute % 3 == 0) ? "TAF AMD" : "TAF";
+        var tafLine = $"{tafPrefix} TEST {issue} {from}/{to} {tafCore}=";
+        taf["TEST"] = tafLine.Trim();
+
+        return (metar, taf);
+
     }
 }
