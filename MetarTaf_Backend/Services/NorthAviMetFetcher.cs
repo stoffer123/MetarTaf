@@ -20,7 +20,7 @@ namespace MetarTaf_Backend.Services
             using var req = new HttpRequestMessage(HttpMethod.Get, url);
             req.Headers.TryAddWithoutValidation("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
             req.Headers.TryAddWithoutValidation("Accept-Language", "en-US,en;q=0.9,da;q=0.8");
-            req.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0");
+            req.Headers.TryAddWithoutValidation("User-Agent", "MetarTaf/0.2 (contact: christophermikkelsen@live.dk)");
             req.Headers.Referrer = new Uri("https://www.northavimet.com/metar-taf");
 
             using var res = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
