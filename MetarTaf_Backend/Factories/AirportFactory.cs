@@ -1,4 +1,5 @@
-﻿using Metar.Decoder.Chunkdecoder;
+﻿using Domain.ValueObjects;
+using Metar.Decoder.Chunkdecoder;
 using MetarTaf_Backend.Models;
 using MetarTaf_Backend.Services;
 using System;

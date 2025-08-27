@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetarTaf_Backend.Models
+namespace Domain.ValueObjects
 {
-    public class AirportInfo
+    public record AirportInfo
     {
         public string icaoId { get; set; }
         public string iataId { get; set; }
