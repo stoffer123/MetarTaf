@@ -1,4 +1,5 @@
-﻿using Metar.Decoder;
+﻿using Domain.Reports;
+using Metar.Decoder;
 using Metar.Decoder.Entity;
 using MetarTaf_Backend.Models;
 using System;

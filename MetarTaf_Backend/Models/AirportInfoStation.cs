@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MetarTaf_Backend.Services;
+using Domain.Reports;
 
 namespace MetarTaf_Backend.Models
 {

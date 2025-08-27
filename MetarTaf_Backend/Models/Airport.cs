@@ -1,4 +1,5 @@
-﻿using Domain.ValueObjects;
+﻿using Domain.Reports;
+using Domain.ValueObjects;
 
 
 namespace MetarTaf_Backend.Models

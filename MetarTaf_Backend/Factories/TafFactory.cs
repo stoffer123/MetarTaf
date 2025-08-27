@@ -1,4 +1,5 @@
-﻿using MetarTaf_Backend.Models;
+﻿using Domain.Reports;
+using MetarTaf_Backend.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
