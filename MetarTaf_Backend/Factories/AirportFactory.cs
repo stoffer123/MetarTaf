@@ -1,6 +1,6 @@
-﻿using Domain.ValueObjects;
-using Metar.Decoder.Chunkdecoder;
-using MetarTaf_Backend.Models;
+﻿using Domain.Ports;
+using Domain.ValueObjects;
+using Domain.Entities;
 using MetarTaf_Backend.Services;
 using System;
 using System.Collections.Generic;

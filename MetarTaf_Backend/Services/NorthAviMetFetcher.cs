@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Domain.Ports;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -51,7 +52,7 @@ namespace MetarTaf_Backend.Services
         }
 
         public async Task<(Dictionary<string, string> Metar, Dictionary<string, string> Taf)>
-            GetLatestPerIcaoAsync(IEnumerable<string> icaos, int windValidTime = 0, CancellationToken ct = default)
+            GetLatestPerIcaoRawAsync(IEnumerable<string> icaos, int windValidTime = 0, CancellationToken ct = default)
         {
             var query = string.Join(' ', icaos.Select(x => x.Trim().ToUpperInvariant()));
             var html = await GetOpmetRawAsync(query, windValidTime, ct);
@@ -142,5 +143,6 @@ namespace MetarTaf_Backend.Services
 
             return (metar, taf);
         }
+
     }
 }

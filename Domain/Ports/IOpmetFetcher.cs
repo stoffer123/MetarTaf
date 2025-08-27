@@ -20,6 +20,6 @@ namespace Domain.Ports
             GetLatestPerIcaoRawAsync(IEnumerable<string> icaos, int windValidTime = 0, CancellationToken ct = default);
 
         /// <summary>Valgfrit: en port der returnerer domæneobjekter direkte.</summary>
-        Task<IReadOnlyList<OpmetReport>> GetLatestPerIcaoAsync(IEnumerable<string> icaos, int windValidTime = 0, CancellationToken ct = default);
+        //Task<IReadOnlyList<OpmetReport>> GetLatestPerIcaoAsync(IEnumerable<string> icaos, int windValidTime = 0, CancellationToken ct = default);
     }
 }

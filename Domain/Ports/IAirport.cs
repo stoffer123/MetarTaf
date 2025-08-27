@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetarTaf_Backend.Models
+namespace Domain.Ports
 {
     public interface IAirport : IDisposable
     {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Ports;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,12 +19,12 @@ namespace MetarTaf_Backend.Services
         }
 
         public async Task<(Dictionary<string, string> Metar, Dictionary<string, string> Taf)>
-            GetLatestPerIcaoAsync(IEnumerable<string> icaos, int windValidTime = 0, CancellationToken ct = default)
+            GetLatestPerIcaoRawAsync(IEnumerable<string> icaos, int windValidTime = 0, CancellationToken ct = default)
         {
             var list = icaos.Select(s => s.Trim().ToUpperInvariant()).Distinct().ToArray();
 
             // 1) Hent fra real for alle (inkl. TEST, det er fint; vi overskriver TEST bagefter)
-            var (metar, taf) = await _real.GetLatestPerIcaoAsync(list, windValidTime, ct);
+            var (metar, taf) = await _real.GetLatestPerIcaoRawAsync(list, windValidTime, ct);
 
             // 2) Merge TEST fra test-kilden (baseret på NU)
             var now = DateTime.UtcNow;
@@ -34,5 +35,6 @@ namespace MetarTaf_Backend.Services
 
             return (metar, taf);
         }
+
     }
 }

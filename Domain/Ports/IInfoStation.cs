@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetarTaf_Backend.Models
+namespace Domain.Ports
 {
-    internal interface IInfoStation
+    public interface IInfoStation
     {
         void removeObserver(IAirport observer);
         void addObserver(IAirport observer);

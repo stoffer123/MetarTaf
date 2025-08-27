@@ -1,4 +1,5 @@
-﻿using Domain.Reports;
+﻿using Domain.Ports;
+using Domain.Reports;
 using Metar.Decoder.Entity;
 using MetarTaf_Backend.Factories;
 using MetarTaf_Backend.Models;
@@ -31,7 +32,7 @@ namespace MetarTaf_Backend.Services
 
             try
             {
-                var (metarMap, _) = await fetcher.GetLatestPerIcaoAsync(icaoList, windValidTime: 0);
+                var (metarMap, _) = await fetcher.GetLatestPerIcaoRawAsync(icaoList, windValidTime: 0);
 
                 foreach (var kv in metarMap)
                 {

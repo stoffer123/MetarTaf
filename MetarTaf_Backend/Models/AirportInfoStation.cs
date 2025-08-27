@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MetarTaf_Backend.Services;
 using Domain.Reports;
+using Domain.Ports;
 
 namespace MetarTaf_Backend.Models
 {
