@@ -1,16 +1,17 @@
 ﻿using Domain.Ports;
 using Domain.ValueObjects;
 using Domain.Entities;
-using MetarTaf_Backend.Services;
+using Domain.Factories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MetarTaf_Backend.Services;
 
 namespace MetarTaf_Backend.Factories
 {
-    internal class AirportFactory
+    public class AirportFactory
     {
         IInfoStation infoStation;
         

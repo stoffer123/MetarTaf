@@ -1,17 +1,10 @@
 ﻿using Domain.Reports;
 using Metar.Decoder;
 using Metar.Decoder.Entity;
-using MetarTaf_Backend.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MetarTaf_Backend.Factories
+namespace Domain.Factories
 {
-    internal class MetarFactory
+    public class MetarFactory
     {
         public MetarFactory() { }
 
