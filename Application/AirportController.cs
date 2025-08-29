@@ -1,10 +1,13 @@
-﻿using Domain.Factories;
+﻿using Application.DTO;
+using Application.Mappers;
+using Domain.Entities;
+using Domain.Factories;
 using Domain.Ports;
 using Domain.ValueObjects;
 
 namespace Application
 {
-    public class AirportController : IAirportController
+    public class AirportController
     {
         private readonly IInfoStation infoStation;
         private readonly AirportFactory airportFactory;
@@ -31,16 +34,6 @@ namespace Application
             ResetFetchTimerAfterFetch();
         }
 
-        public void ResetFetchTimer()
-        {
-            lock (timerLock)
-            {
-                StopFetchTimer();
-                StartFetchTimer();
-                Console.WriteLine("Fetch timer reset.");
-            }
-        }
-
         public void ResetFetchTimerAfterFetch()
         {
             lock (timerLock)
@@ -51,7 +44,7 @@ namespace Application
             }
         }
 
-        public void StopFetchTimer()
+        private void StopFetchTimer()
         {
             lock (timerLock)
             {
@@ -60,7 +53,7 @@ namespace Application
             }
         }
 
-        public void StartFetchTimer()
+        private void StartFetchTimer()
         {
             lock (timerLock)
             {
@@ -118,6 +111,30 @@ namespace Application
             }
         }
 
+
+
+        public async Task<AirportOverviewDto?> GetOverviewAsync(string icao, CancellationToken ct = default)
+        {
+            var ap = await GetAirportAsync(icao, ct);
+            return ap is null ? null : AirportMapper.ToOverviewDto(ap);
+        }
+
+        // Snapshotter alle trackede ICAO’er og returnerer DTO’er i en batch
+        public Task<IReadOnlyList<AirportOverviewDto>> GetAllOverviewsAsync(CancellationToken ct = default)
+        {
+            List<IAirport> snapshot;
+            lock (lockObject)
+            {
+                snapshot = infoStation.GetObservers().ToList();
+            }
+
+            var list = snapshot
+                .Select(AirportMapper.ToOverviewDto)
+                .ToList()
+                .AsReadOnly();
+
+            return Task.FromResult((IReadOnlyList<AirportOverviewDto>)list);
+        }
 
 
     }

@@ -46,7 +46,7 @@ builder.Services.AddSingleton<IAirportInfoProvider, AirportInfoProvider>();
 builder.Services.AddSingleton<AirportFactory>();
 
 // ---------- Application-layer ----------
-builder.Services.AddSingleton<IAirportController>(sp =>
+builder.Services.AddSingleton<AirportController>(sp =>
     new AirportController(
         sp.GetRequiredService<IInfoStation>(),
         sp.GetRequiredService<AirportFactory>(),
@@ -70,7 +70,7 @@ using (var scope = app.Services.CreateScope())
     await AirportInfoService.createAirportInfo();
 
     // Sørg for at TEST altid er aktiv
-    var controller = scope.ServiceProvider.GetRequiredService<IAirportController>();
+    var controller = scope.ServiceProvider.GetRequiredService<AirportController>();
     await controller.GetAirportAsync("TEST");
 }
 
