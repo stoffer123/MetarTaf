@@ -1,11 +1,4 @@
 ﻿@page "/Overview"
-@using Metar.Decoder.Entity
-@using MetarTaf_Backend.Models
-@using Microsoft.AspNetCore.Components.Web.Extensions
-@using System.Text.Json
-@using Taf.Decoder.entity
-@using Domain.Reports
-@using MetarTaf_Backend.Utils
 @implements IDisposable
 @rendermode InteractiveServer
 
@@ -39,80 +32,45 @@
 
 </div>
 
-@foreach (var airport in airports)
+@foreach (var ap in airports)
 {
-    DateTime nowUtc = currentTime; // du bruger allerede UTC
-	TimeSpan nowClock = nowUtc.TimeOfDay;
+    var nowUtc = currentTime;
+    var nowClock = nowUtc.TimeOfDay;
 
     // METAR
-    MetarReport latestMetar = airport.getMetars().OrderByDescending(m => m.Key).FirstOrDefault().Value;
-    DateTime metarReportUtc;
-    DateTime metarFetchUtc;
-    TimeSpan metarReportAge = TimeSpan.Zero;
-    TimeSpan metarFetchDiff = TimeSpan.Zero;
-
-    if (latestMetar != null)
+    var m = ap.LatestMetar;
+    var metarReportAge = TimeSpan.Zero;
+    var metarFetchDiff = TimeSpan.Zero;
+    if (m != null)
     {
-        metarReportUtc = DateTime.SpecifyKind(latestMetar.reportTime, DateTimeKind.Utc);
-        metarFetchUtc = DateTime.SpecifyKind(latestMetar.fetchTime, DateTimeKind.Utc);
-        metarReportAge = nowClock - metarReportUtc.TimeOfDay;
-        metarFetchDiff = metarFetchUtc.TimeOfDay - metarReportUtc.TimeOfDay; // kan være negativ (hentet før “officiel” tid)
-
-    }
-    else
-    {
-        metarReportUtc = DateTime.MinValue; // eller en anden passende værdi
-        metarFetchUtc = DateTime.MinValue; // eller en anden passende værdi
+        metarReportAge = nowClock - m.ReportTimeUtc.TimeOfDay;
+        metarFetchDiff = m.FetchTimeUtc.TimeOfDay - m.ReportTimeUtc.TimeOfDay;
     }
 
     // TAF
-    TafReport latestTaf = airport.getTafs().OrderByDescending(t => t.Key).FirstOrDefault().Value;
-    DateTime tafReportUtc;
-    DateTime tafFetchUtc;
-    TimeSpan tafReportAge = TimeSpan.Zero;
-    TimeSpan tafFetchDiff = TimeSpan.Zero;
-	bool tafIsAmd = false; // TAF AMD flag
-
-    if (latestTaf != null)
+    var t = ap.LatestTaf;
+    var tafReportAge = TimeSpan.Zero;
+    var tafFetchDiff = TimeSpan.Zero;
+    if (t != null)
     {
-        tafReportUtc = DateTime.SpecifyKind(latestTaf.reportTime, DateTimeKind.Utc);
-        tafFetchUtc = DateTime.SpecifyKind(latestTaf.fetchTime, DateTimeKind.Utc);
-		tafIsAmd = latestTaf.decodedTaf.Type == DecodedTaf.TafType.TAFAMD;
-        tafReportAge = nowClock - tafReportUtc.TimeOfDay;
-        tafFetchDiff = tafFetchUtc.TimeOfDay - tafReportUtc.TimeOfDay;
-        
-
-    }
-    else
-    {
-		tafReportUtc = DateTime.MinValue; // eller en anden passende værdi
-		tafFetchUtc = DateTime.MinValue; // eller en anden passende værdi
+        tafReportAge = nowClock - t.ReportTimeUtc.TimeOfDay;
+        tafFetchDiff = t.FetchTimeUtc.TimeOfDay - t.ReportTimeUtc.TimeOfDay;
     }
 
-    var icao = airport.getAirportInfo().icaoId;
+    // “ny” pr. bruger (AckTracker)
+    bool metarIsNewForUser = m != null && ack.IsMetarNew(ap.Icao, m.ReportTimeUtc);
+    bool tafIsNewForUser = t != null && ack.IsTafNew(ap.Icao, t.ReportTimeUtc);
 
-    var tol = TimeSpan.FromMinutes(10);
-
-    // Brug samme normalisering som i ConfirmReports
-    var normMetarForAck = latestMetar != null
-        ? TimeNormalizer.NormalizeIssueTimeUtc(metarReportUtc, metarFetchUtc, nowUtc, tol)
-        : DateTime.MinValue;
-
-    var normTafForAck = latestTaf != null
-        ? TimeNormalizer.NormalizeIssueTimeUtc(tafReportUtc, tafFetchUtc, nowUtc, tol)
-        : DateTime.MinValue;
-
-    // metarTime/tafTime er allerede normaliseret UTC
-    bool metarIsNewForUser = latestMetar != null && ack.IsMetarNew(icao, normMetarForAck);
-    bool tafIsNewForUser = latestTaf != null && ack.IsTafNew(icao, normTafForAck);
-
-
-    @if (latestTaf != null && tafIsNewForUser && tafIsAmd)
+    // lyd på AMD + ny
+    if (t != null && t.IsAmd && tafIsNewForUser)
     {
-        // trig lyd (en gang per render)
         _ = JSRuntime.InvokeVoidAsync("playAmdAlert");
     }
 
+    var tafRowClass =
+        (t != null && tafIsNewForUser && showNewTaf)
+        ? (t.IsAmd ? "blink-red" : "taf-new-report")
+        : "taf-old-report";
 
     <div>
         <table class="table-parent">
@@ -127,33 +85,25 @@
                 </tr>
             </thead>
             <tbody>
-                @{
-                    // afgør class til TAF-rækken
-                    var tafRowClass =
-                    (latestTaf != null && tafIsNewForUser && showNewTaf)
-                    ? (tafIsAmd ? "blink-red" : "taf-new-report")
-                    : "taf-old-report";
-                }
-
                 <tr class="@tafRowClass">
                     <td class="actions-cell" rowspan="2">
-                        <button @onclick="() => ConfirmReports(airport)" title="Confirm reports">✔️</button>
-                        <button @onclick="() => RemoveAirport(airport.getAirportInfo().icaoId)" title="Remove airport">❌</button>
+                        <button @onclick="() => ConfirmReports(ap)" title="Confirm reports">✔️</button>
+                        <button @onclick="() => RemoveAirport(ap.Icao)" title="Remove airport">❌</button>
                     </td>
 
-                    <td class="station-cell" rowspan="2" @onclick="() => NavigateToAirportPage(airport.getAirportInfo().icaoId)">
+                    <td class="station-cell" rowspan="2" @onclick="() => NavigateToAirportPage(ap.Icao)">
                         <div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;">
-                            <div>@airport.getAirportInfo().icaoId</div>
-                            <div class="station-city">@airport.getAirportInfo().country</div>
+                            <div>@ap.Icao</div>
+                            <div class="station-city">@ap.Country</div>
                         </div>
                     </td>
 
-                    @if (latestTaf != null)
+                    @if (t != null)
                     {
-                        <td>@latestTaf.typeString</td>
-                        <td>@tafReportUtc.ToString("HH:mm") (@FormatTimeDiff(tafReportAge))</td>
-                        <td>@tafFetchUtc.ToString("HH:mm") (@FormatTimeDiff(tafFetchDiff))</td>
-                        <td>@latestTaf.decodedTaf?.RawTaf</td>
+                        <td>@t.Type</td>
+                        <td>@t.ReportTimeUtc.ToString("HH:mm") (@FormatTimeDiff(tafReportAge))</td>
+                        <td>@t.FetchTimeUtc.ToString("HH:mm") (@FormatTimeDiff(tafFetchDiff))</td>
+                        <td>@t.Raw</td>
                     }
                     else
                     {
@@ -164,22 +114,14 @@
                     }
                 </tr>
 
-
                 <tr>
-                    @if (latestMetar != null)
+                    @if (m != null)
                     {
-                        <td class="report-type-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
-                            @latestMetar.typeString
-                        </td>
-                        <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
-                            @metarReportUtc.ToString("HH:mm") (@FormatTimeDiff(metarReportAge))
-                        </td>
-                        <td class="reports-time-cell @((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
-                            @metarFetchUtc.ToString("HH:mm") (@FormatTimeDiff(metarFetchDiff))
-                        </td>
-                        <td class="@((metarIsNewForUser && showNewMetar ? "metar-new-report" : "metar-old-report"))">
-                            @latestMetar.decodedMetar?.RawMetar
-                        </td>
+                        var metarClass = (metarIsNewForUser && showNewMetar) ? "metar-new-report" : "metar-old-report";
+                        <td class="report-type-cell @metarClass">@m.Type</td>
+                        <td class="reports-time-cell @metarClass">@m.ReportTimeUtc.ToString("HH:mm") (@FormatTimeDiff(metarReportAge))</td>
+                        <td class="reports-time-cell @metarClass">@m.FetchTimeUtc.ToString("HH:mm") (@FormatTimeDiff(metarFetchDiff))</td>
+                        <td class="@metarClass">@m.Raw</td>
                     }
                     else
                     {

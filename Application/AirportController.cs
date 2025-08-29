@@ -111,7 +111,8 @@ namespace Application
             }
         }
 
-
+        public Task<bool> ForceFetchAsync(CancellationToken ct = default)
+             => infoStation.FetchNewReportsAsync(ct);
 
         public async Task<AirportOverviewDto?> GetOverviewAsync(string icao, CancellationToken ct = default)
         {

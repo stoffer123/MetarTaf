@@ -1,10 +1,9 @@
-using Domain.Ports;
-using MetarTaf_Backend;
-using MetarTaf_Backend.Models;
-using MetarTaf_Backend.Utils;
+using Application;
+using Application.Utils;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text.Json;
+using Application.DTO;    // AirportOverviewDto, MetarDTO, TafDto
 
 
 
@@ -14,7 +13,7 @@ namespace MetarTaf.Components.Pages
     {
         private DateTime currentTime;
         private Timer? timer;
-        private List<IAirport> airports = new List<IAirport>();
+        private List<AirportOverviewDto> airports = new();
         private bool isInitialized = false;
         private bool showNewTaf = true;
         private bool showNewMetar = true;
@@ -22,10 +21,10 @@ namespace MetarTaf.Components.Pages
         private readonly AckTracker ack = new();
         const string AckMetarKey = "ackMetarUtc";
         const string AckTafKey = "ackTafUtc";
-        // undgå dobbelt-subscribe (valgfrit men rart)
-        private readonly HashSet<string> _subscribed = new(StringComparer.OrdinalIgnoreCase);
+        private readonly SemaphoreSlim _refreshGate = new(1, 1);
+        private int _tick;
         [Inject] private IJSRuntime JSRuntime { get; set; }
-        [Inject] private IAirportController airportController { get; set; }
+        [Inject] private AirportController airportController { get; set; }
 
         private const string AirportsStorageKey = "airports";
         private NewAirportModel newAirportModel = new NewAirportModel();
@@ -51,8 +50,15 @@ namespace MetarTaf.Components.Pages
         {
             currentTime = DateTime.UtcNow;
             lastAcknowledgeTime = lastAcknowledgeTime.AddSeconds(1);
+
+            // Hver 10. sekund: hent friske DTO’er
+            var t = Interlocked.Increment(ref _tick);
+            if (t % 10 == 0)
+                _ = RefreshOverviewsAsync();  // fire-and-forget
+
             InvokeAsync(StateHasChanged);
         }
+
 
         private async Task AddAirport()
         {
@@ -62,7 +68,7 @@ namespace MetarTaf.Components.Pages
                 newAirportModel.Icao = String.Empty;
 
                 // Check if an airport with the same ICAO code already exists in the list
-                var existingAirport = airports.FirstOrDefault(a => a.getAirportInfo().icaoId == icaoToAdd);
+                var existingAirport = airports.FirstOrDefault(a => a.Icao == icaoToAdd);
                 if (existingAirport != null)
                 {
                     Console.WriteLine($"Airport with ICAO {icaoToAdd} is already in the list.");
@@ -72,14 +78,15 @@ namespace MetarTaf.Components.Pages
 
                 try
                 {
-                    var airport = await airportController.GetAirportAsync(icaoToAdd);
+                    var airport = await airportController.GetOverviewAsync(icaoToAdd);
 
                     // Check if the airport has valid data
                     if (airport != null)
                     {
-                        Attach(airport); // Attach the airport to the controller
                         airports.Add(airport);
                         await SaveAirportsToLocalStorage();
+                        await airportController.ForceFetchAsync();
+                        await RefreshOverviewsAsync();
                         StateHasChanged();
 
                     }
@@ -104,61 +111,42 @@ namespace MetarTaf.Components.Pages
 
         private async Task RemoveAirport(string icao)
         {
-            var ap = airports.FirstOrDefault(a => a.getAirportInfo().icaoId == icao);
-            if (ap != null)
-            {
-                Detach(ap);   // <-- NYT
-            }
-
-            airportController.releaseAirport(icao);
-            airports.RemoveAll(a => a.getAirportInfo().icaoId == icao);
+            airports.RemoveAll(a => a.Icao.Equals(icao, StringComparison.OrdinalIgnoreCase));
             await SaveAirportsToLocalStorage();
             StateHasChanged();
         }
 
 
 
+
         private async Task ClearAllAirports()
         {
-            foreach (IAirport airport in airports)
-            {
-                Detach(airport); // Detach the airport from the controller
-                airportController.releaseAirport(airport.getAirportInfo().icaoId);
-            }
-
-            airports.Clear(); // Clear the in-memory dictionary
-            await SaveAirportsToLocalStorage(); // Update the local storage
-            StateHasChanged(); // Notify the UI to re-render
+            airports.Clear();
+            await SaveAirportsToLocalStorage();
+            StateHasChanged();
         }
+
 
         private async Task SaveAirportsToLocalStorage()
         {
-            List<string> icaoList = new List<string>();
-
-            foreach (IAirport airport in airports)
-            {
-                icaoList.Add(airport.getAirportInfo().icaoId);
-            }
-
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", AirportsStorageKey, JsonSerializer.Serialize(icaoList));
+            var icaos = airports.Select(a => a.Icao).ToList();
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", AirportsStorageKey, JsonSerializer.Serialize(icaos));
         }
+
 
         private async Task LoadAirportsFromLocalStorage()
         {
             var icaoListJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", AirportsStorageKey);
-            if (!string.IsNullOrEmpty(icaoListJson))
+            if (string.IsNullOrEmpty(icaoListJson)) return;
+
+            var icaos = JsonSerializer.Deserialize<List<string>>(icaoListJson) ?? new List<string>();
+            foreach (var icao in icaos.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                var icaoList = JsonSerializer.Deserialize<List<string>>(icaoListJson);
-                if (icaoList != null)
-                {
-                    foreach (var icao in icaoList.Distinct(StringComparer.OrdinalIgnoreCase))
-                    {
-                        var airport = await airportController.GetAirportAsync(icao);
-                        Attach(airport);           // <-- NYT
-                        airports.Add(airport);
-                    }
-                }
+                var dto = await airportController.GetOverviewAsync(icao); // <-- ny use case i Application
+                if (dto != null) airports.Add(dto);
             }
+            await airportController.ForceFetchAsync();
+            await RefreshOverviewsAsync();
         }
 
         private void NavigateToAirportPage(string icao)
@@ -171,75 +159,39 @@ namespace MetarTaf.Components.Pages
             public string Icao { get; set; } = string.Empty;
         }
 
-        public async Task ConfirmReports(IAirport airport)
+        public async Task ConfirmReports(AirportOverviewDto ap)
         {
-            var icao = airport.getAirportInfo().icaoId;
-
-            var latestMetar = airport.getMetars().OrderByDescending(m => m.Key).FirstOrDefault().Value;
-            var latestTaf = airport.getTafs().OrderByDescending(t => t.Key).FirstOrDefault().Value;
-
             var nowUtc = DateTime.UtcNow;
 
-            if (latestMetar != null)
-            {
-                var norm = TimeNormalizer.NormalizeIssueTimeUtc(
-                    DateTime.SpecifyKind(latestMetar.reportTime, DateTimeKind.Utc),
-                    DateTime.SpecifyKind(latestMetar.fetchTime, DateTimeKind.Utc),
-                    nowUtc,
-                    tolerance: TimeSpan.FromMinutes(10));
-                ack.AckMetar(icao, norm);
-            }
+            if (ap.LatestMetar != null)
+                ack.AckMetar(ap.Icao, ap.LatestMetar.ReportTimeUtc);
 
-            if (latestTaf != null)
-            {
-                var norm = TimeNormalizer.NormalizeIssueTimeUtc(
-                    DateTime.SpecifyKind(latestTaf.reportTime, DateTimeKind.Utc),
-                    DateTime.SpecifyKind(latestTaf.fetchTime, DateTimeKind.Utc),
-                    nowUtc,
-                    tolerance: TimeSpan.FromMinutes(10));
-                ack.AckTaf(icao, norm);
-            }
+            if (ap.LatestTaf != null)
+                ack.AckTaf(ap.Icao, ap.LatestTaf.ReportTimeUtc);
 
-            lastAcknowledgeTime = DateTime.MinValue;
+            lastAcknowledgeTime = nowUtc;   // <-- ikke MinValue
             await SaveAcksAsync();
             StateHasChanged();
         }
+
 
         public async Task ConfirmAllReports()
         {
             var nowUtc = DateTime.UtcNow;
 
-            foreach (var airport in airports)
+            foreach (var ap in airports)
             {
-                var icao = airport.getAirportInfo().icaoId;
-
-                var latestMetar = airport.getMetars().OrderByDescending(m => m.Key).FirstOrDefault().Value;
-                if (latestMetar != null)
-                {
-                    var norm = TimeNormalizer.NormalizeIssueTimeUtc(
-                        DateTime.SpecifyKind(latestMetar.reportTime, DateTimeKind.Utc),
-                        DateTime.SpecifyKind(latestMetar.fetchTime, DateTimeKind.Utc),
-                        nowUtc,
-                        tolerance: TimeSpan.FromMinutes(10));
-                    ack.AckMetar(icao, norm);
-                }
-
-                var latestTaf = airport.getTafs().OrderByDescending(t => t.Key).FirstOrDefault().Value;
-                if (latestTaf != null)
-                {
-                    var norm = TimeNormalizer.NormalizeIssueTimeUtc(
-                        DateTime.SpecifyKind(latestTaf.reportTime, DateTimeKind.Utc),
-                        DateTime.SpecifyKind(latestTaf.fetchTime, DateTimeKind.Utc),
-                        nowUtc,
-                        tolerance: TimeSpan.FromMinutes(10));
-                    ack.AckTaf(icao, norm);
-                }
+                if (ap.LatestMetar != null)
+                    ack.AckMetar(ap.Icao, ap.LatestMetar.ReportTimeUtc);
+                if (ap.LatestTaf != null)
+                    ack.AckTaf(ap.Icao, ap.LatestTaf.ReportTimeUtc);
             }
 
-            lastAcknowledgeTime = DateTime.MinValue;
+            lastAcknowledgeTime = nowUtc;   // <-- ikke MinValue
             await SaveAcksAsync();
             StateHasChanged();
         }
+
 
         private async Task LoadAcksAsync()
         {
@@ -263,26 +215,6 @@ namespace MetarTaf.Components.Pages
             );
         }
 
-        // kald denne når en airport melder nyt
-        private void OnAirportUpdated()
-        {
-            InvokeAsync(StateHasChanged);
-        }
-
-        private void Attach(IAirport ap)
-        {
-            var icao = ap.getAirportInfo().icaoId;
-            if (_subscribed.Add(icao))
-                ap.Updated += OnAirportUpdated;
-        }
-
-        private void Detach(IAirport ap)
-        {
-            var icao = ap.getAirportInfo().icaoId;
-            if (_subscribed.Remove(icao))
-                ap.Updated -= OnAirportUpdated;
-        }
-
         private static string FormatTimeDiff(TimeSpan ts)
         {
             if (ts < TimeSpan.Zero)
@@ -291,11 +223,32 @@ namespace MetarTaf.Components.Pages
                 return ts.ToString(@"hh\:mm");
         }
 
+        private async Task RefreshOverviewsAsync()
+        {
+            if (!await _refreshGate.WaitAsync(0)) return;
+            try
+            {
+                if (airports.Count == 0) return;
+
+                var icaos = airports.Select(a => a.Icao).ToArray();
+                var tasks = icaos.Select(icao => airportController.GetOverviewAsync(icao));
+                var dtos = await Task.WhenAll(tasks);
+
+                airports.Clear();
+                airports.AddRange(dtos.Where(d => d != null)!);
+
+                await InvokeAsync(StateHasChanged);
+            }
+            finally
+            {
+                _refreshGate.Release();
+            }
+        }
+
+
 
         public void Dispose()
         {
-            foreach (var ap in airports)
-                Detach(ap);        // <-- NYT
             timer?.Dispose();
         }
 
