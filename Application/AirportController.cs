@@ -1,17 +1,10 @@
-﻿using Domain.Ports;
-using MetarTaf_Backend.Factories;
-using MetarTaf_Backend.Models;
-using MetarTaf_Backend.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Domain.Factories;
+﻿using Domain.Factories;
+using Domain.Ports;
+using Domain.ValueObjects;
 
-namespace MetarTaf_Backend
+namespace Application
 {
-    public class AirportController
+    public class AirportController : IAirportController
     {
         private readonly Dictionary<string, IAirport> airports = new();
         private readonly IInfoStation infoStation;
@@ -22,12 +15,12 @@ namespace MetarTaf_Backend
         private readonly object timerLock = new();
         private readonly int timerDelayMinutes;
 
-        public AirportController(IOpmetFetcher fetcher, int timerDelayMinutes = 1)
+        public AirportController(IInfoStation infoStation, AirportFactory airportFactory, int timerDelayMinutes = 1)
         {
             this.timerDelayMinutes = timerDelayMinutes;
 
-            infoStation = new AirportInfoStation(this, fetcher);
-            airportFactory = new AirportFactory(infoStation);
+            this.infoStation = infoStation;
+            this.airportFactory = airportFactory;
 
             InitializeFetchTimer();
 
@@ -36,6 +29,7 @@ namespace MetarTaf_Backend
         private void InitializeFetchTimer()
         {
             fetchTimer = new Timer(async _ => await infoStation.FetchNewReportsAsync(), null, TimeSpan.Zero, TimeSpan.FromMinutes(timerDelayMinutes));
+            ResetFetchTimerAfterFetch();
         }
 
         public void ResetFetchTimer()
@@ -76,23 +70,33 @@ namespace MetarTaf_Backend
             }
         }
 
-        public IAirport getAirport(string icao)
+        public async Task<IAirport?> GetAirportAsync(string icao, CancellationToken ct = default)
         {
             lock (lockObject)
             {
-                if (airports.TryGetValue(icao, out var airport))
+                if (airports.TryGetValue(icao, out var existing))
                 {
-                    airport.incrementReferenceCount();
-                    return airport;
+                    existing.incrementReferenceCount();
+                    return existing;
+                }
+            }
+
+            var created = await airportFactory.CreateAsync(icao, ct);
+            if (created is null) return null;
+
+            lock (lockObject)
+            {
+                if (airports.TryGetValue(icao, out var racing))
+                {
+                    // en anden tråd nåede at lave den i mellemtiden
+                    created.Dispose();
+                    racing.incrementReferenceCount();
+                    return racing;
                 }
 
-                airport = airportFactory.createAirport(icao);
-                if (airport != null)
-                {
-                    airports.Add(airport.getAirportInfo().icaoId, airport);
-                    infoStation.addObserver(airport);
-                }
-                return airport;
+                airports.Add(created.getAirportInfo().icaoId, created);
+                infoStation.addObserver(created);
+                return created;
             }
         }
 

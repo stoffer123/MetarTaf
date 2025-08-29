@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\MetarTaf_Backend\MetarTaf_Backend.csproj" />
   </ItemGroup>
 

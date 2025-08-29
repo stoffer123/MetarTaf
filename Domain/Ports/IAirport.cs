@@ -11,6 +11,7 @@ namespace Domain.Ports
     public interface IAirport : IDisposable
     {
         event Action? Updated;
+        AirportInfo airportInfo { get; }
         void updateMetars();
         void updateTafs();
         void updateAirportInfo();

@@ -25,7 +25,7 @@ namespace MetarTaf.Components.Pages
         // undgå dobbelt-subscribe (valgfrit men rart)
         private readonly HashSet<string> _subscribed = new(StringComparer.OrdinalIgnoreCase);
         [Inject] private IJSRuntime JSRuntime { get; set; }
-        [Inject] private AirportController airportController { get; set; }
+        [Inject] private IAirportController airportController { get; set; }
 
         private const string AirportsStorageKey = "airports";
         private NewAirportModel newAirportModel = new NewAirportModel();
@@ -72,7 +72,7 @@ namespace MetarTaf.Components.Pages
 
                 try
                 {
-                    var airport = airportController.getAirport(icaoToAdd);
+                    var airport = await airportController.GetAirportAsync(icaoToAdd);
 
                     // Check if the airport has valid data
                     if (airport != null)
@@ -153,7 +153,7 @@ namespace MetarTaf.Components.Pages
                 {
                     foreach (var icao in icaoList.Distinct(StringComparer.OrdinalIgnoreCase))
                     {
-                        var airport = airportController.getAirport(icao);
+                        var airport = await airportController.GetAirportAsync(icao);
                         Attach(airport);           // <-- NYT
                         airports.Add(airport);
                     }

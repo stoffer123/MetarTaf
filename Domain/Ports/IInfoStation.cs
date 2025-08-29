@@ -17,5 +17,6 @@ namespace Domain.Ports
         Dictionary<DateTime, MetarReport> getMetars(string icao);
         Dictionary<DateTime, TafReport> getTafs(string icao);
         Task<bool> FetchNewReportsAsync(CancellationToken ct = default);
+        string[] GetObserverIcaos();
     }
 }

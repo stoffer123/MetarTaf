@@ -1,9 +1,6 @@
 ﻿using Domain.Factories;
 using Domain.Ports;
 using Domain.Reports;
-using Metar.Decoder.Entity;
-using MetarTaf_Backend.Factories;
-using MetarTaf_Backend.Models;
 
 namespace MetarTaf_Backend.Services
 {
@@ -12,19 +9,18 @@ namespace MetarTaf_Backend.Services
         private readonly Dictionary<string, Dictionary<DateTime, MetarReport>> metars = new();
         private readonly MetarFactory metarFactory = new();
         private readonly IInfoStation infoStation;
-        private readonly AirportController airportController;
         private readonly IOpmetFetcher fetcher;
 
-        public MetarService(IInfoStation infostation, AirportController airportController, IOpmetFetcher fetcher)
+        public MetarService(IInfoStation infostation, IOpmetFetcher fetcher)
         {
             this.infoStation = infostation;
-            this.airportController = airportController;
             this.fetcher = fetcher;
         }
 
         public async Task fetchMetars()
         {
-            var icaoList = airportController.getAirportIcaoList().ToArray();
+            var icaoList = infoStation.GetObserverIcaos();
+
             if (icaoList.Length == 0)
             {
                 infoStation.notifyMetarChange();
