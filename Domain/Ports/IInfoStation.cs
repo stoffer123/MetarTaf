@@ -1,6 +1,7 @@
 ﻿using Domain.Reports;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace Domain.Ports
         Dictionary<DateTime, MetarReport> getMetars(string icao);
         Dictionary<DateTime, TafReport> getTafs(string icao);
         Task<bool> FetchNewReportsAsync(CancellationToken ct = default);
-        string[] GetObserverIcaos();
+        List<string> GetObserverIcaos();
+        ImmutableList<IAirport> GetObservers();
     }
 }

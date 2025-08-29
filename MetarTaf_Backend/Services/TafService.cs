@@ -19,7 +19,7 @@ namespace MetarTaf_Backend.Services
 
         public async Task FetchTafs()
         {
-            var icaoList = infoStation.GetObserverIcaos();
+            var icaoList = infoStation.GetObserverIcaos().ToArray();
             if (icaoList.Length == 0)
             {
                 infoStation.notifyTafChange();

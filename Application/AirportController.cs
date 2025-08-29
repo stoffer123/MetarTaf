@@ -6,7 +6,6 @@ namespace Application
 {
     public class AirportController : IAirportController
     {
-        private readonly Dictionary<string, IAirport> airports = new();
         private readonly IInfoStation infoStation;
         private readonly AirportFactory airportFactory;
         private readonly object lockObject = new();
@@ -74,10 +73,11 @@ namespace Application
         {
             lock (lockObject)
             {
-                if (airports.TryGetValue(icao, out var existing))
+                IAirport? airport = infoStation.GetObservers().FirstOrDefault(a => a.airportInfo.icaoId == icao);
+                if (airport != null)
                 {
-                    existing.incrementReferenceCount();
-                    return existing;
+                    airport.incrementReferenceCount();
+                    return airport;
                 }
             }
 
@@ -86,15 +86,16 @@ namespace Application
 
             lock (lockObject)
             {
-                if (airports.TryGetValue(icao, out var racing))
+                IAirport? airport = infoStation.GetObservers().FirstOrDefault(a => a.airportInfo.icaoId == icao);
+                if (airport != null)
                 {
                     // en anden tråd nåede at lave den i mellemtiden
                     created.Dispose();
-                    racing.incrementReferenceCount();
-                    return racing;
+                    airport.incrementReferenceCount();
+                    return airport;
                 }
 
-                airports.Add(created.getAirportInfo().icaoId, created);
+              
                 infoStation.addObserver(created);
                 return created;
             }
@@ -104,12 +105,12 @@ namespace Application
         {
             lock (lockObject)
             {
-                if (airports.TryGetValue(icao, out var airport))
+                IAirport? airport = infoStation.GetObservers().FirstOrDefault(a => a.airportInfo.icaoId == icao);
+                if (airport != null)
                 {
                     airport.decrementReferenceCount();
                     if (airport.getReferenceCount() < 1)
                     {
-                        airports.Remove(icao);
                         infoStation.removeObserver(airport);
                         airport.Dispose();
                     }
@@ -119,6 +120,5 @@ namespace Application
 
 
 
-        public List<string> getAirportIcaoList() => airports.Keys.ToList();
     }
 }

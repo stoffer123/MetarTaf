@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MetarTaf_Backend.Services;
 using Domain.Reports;
 using Domain.Ports;
+using System.Collections.Immutable;
 
 namespace MetarTaf_Backend.Models
 {
@@ -25,14 +26,19 @@ namespace MetarTaf_Backend.Models
             tafService   = new TafService(this, fetcher);
         }
 
-        public string[] GetObserverIcaos()
+        public ImmutableList<IAirport> GetObservers()
+        {
+            return observers.ToImmutableList();
+        }
+
+        public List<string> GetObserverIcaos()
         {
             var icaoSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var observer in observers)
             {
                 icaoSet.Add(observer.airportInfo.icaoId);
             }
-            return icaoSet.ToArray();
+            return icaoSet.ToList();
         }
 
         public async void addObserver(IAirport observer)
