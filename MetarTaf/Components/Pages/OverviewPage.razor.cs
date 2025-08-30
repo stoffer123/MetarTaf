@@ -112,6 +112,7 @@ namespace MetarTaf.Components.Pages
         private async Task RemoveAirport(string icao)
         {
             airports.RemoveAll(a => a.Icao.Equals(icao, StringComparison.OrdinalIgnoreCase));
+            airportController.releaseAirport(icao);
             await SaveAirportsToLocalStorage();
             StateHasChanged();
         }
@@ -121,6 +122,10 @@ namespace MetarTaf.Components.Pages
 
         private async Task ClearAllAirports()
         {
+            foreach (var ap in airports)
+            {
+                airportController.releaseAirport(ap.Icao);
+            }
             airports.Clear();
             await SaveAirportsToLocalStorage();
             StateHasChanged();
@@ -249,6 +254,10 @@ namespace MetarTaf.Components.Pages
 
         public void Dispose()
         {
+            foreach (var ap in airports)
+            {
+                airportController.releaseAirport(ap.Icao);
+            }
             timer?.Dispose();
         }
 
