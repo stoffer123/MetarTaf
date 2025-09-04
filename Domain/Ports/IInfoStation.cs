@@ -1,12 +1,14 @@
-﻿using System;
+﻿using Domain.Reports;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetarTaf_Backend.Models
+namespace Domain.Ports
 {
-    internal interface IInfoStation
+    public interface IInfoStation
     {
         void removeObserver(IAirport observer);
         void addObserver(IAirport observer);
@@ -16,5 +18,7 @@ namespace MetarTaf_Backend.Models
         Dictionary<DateTime, MetarReport> getMetars(string icao);
         Dictionary<DateTime, TafReport> getTafs(string icao);
         Task<bool> FetchNewReportsAsync(CancellationToken ct = default);
+        List<string> GetObserverIcaos();
+        ImmutableList<IAirport> GetObservers();
     }
 }

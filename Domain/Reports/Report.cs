@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetarTaf_Backend.Models
+namespace Domain.Reports
 {
     public abstract class Report
     {

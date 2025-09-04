@@ -1,13 +1,16 @@
-using MetarTaf.Components;
-using MetarTaf_Backend;
-using MetarTaf_Backend.Services;
-using System.Net;
+﻿using System.Net;
+using Application;               // AirportController
+using Domain.Factories;          // AirportFactory
+using Domain.Ports;              // IOpmetFetcher, IInfoStation, IAirportInfoProvider
+using MetarTaf.Components;       // App (Razor root)
+using MetarTaf_Backend;          // AirportInfoService (infra loader)
+using MetarTaf_Backend.Models;   // AirportInfoStation (IInfoStation-impl)
+using MetarTaf_Backend.Services; // NorthAviMetFetcher, TestOpmetSource, CompositeOpmetFetcher, AirportInfoProvider
+                                 // (AirportInfoProvider = adapter der wrapper AirportInfoService)
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Registr�r typed HttpClient til fetcheren (f�r AirportController)
-// Program.cs
-
+// ---------- Infrastruktur: typed HttpClient til NorthAviMetFetcher ----------
 builder.Services.AddHttpClient<NorthAviMetFetcher>(c =>
 {
     c.Timeout = TimeSpan.FromSeconds(20);
@@ -19,10 +22,10 @@ builder.Services.AddHttpClient<NorthAviMetFetcher>(c =>
                              DecompressionMethods.Brotli
 });
 
-// Test-kilden
+// Test-kilde (til “TEST”-lufthavn mm.)
 builder.Services.AddSingleton<TestOpmetSource>();
 
-// IMPORTANT: Bind IOpmetFetcher til COMPOSITE (ikke NorthAviMetFetcher)
+// Bind IOpmetFetcher til en composite (prod + test)
 builder.Services.AddSingleton<IOpmetFetcher>(sp =>
     new CompositeOpmetFetcher(
         sp.GetRequiredService<NorthAviMetFetcher>(),
@@ -30,32 +33,48 @@ builder.Services.AddSingleton<IOpmetFetcher>(sp =>
     )
 );
 
+// ---------- Domain-porte/adaptere + services ----------
 
+// IInfoStation (⚠️ VIGTIGT: INGEN AirportController i ctor → undgå cirkel!)
+builder.Services.AddSingleton<IInfoStation>(sp =>
+    new AirportInfoStation(sp.GetRequiredService<IOpmetFetcher>()));
 
-// 2) AirportController afh�nger af fetcher
+// AirportInfoProvider (adapter over AirportInfoService) til domænets port
+builder.Services.AddSingleton<IAirportInfoProvider, AirportInfoProvider>();
+
+// AirportFactory (domæne) – forventer IAirportInfoProvider + IInfoStation
+builder.Services.AddSingleton<AirportFactory>();
+
+// ---------- Application-layer ----------
 builder.Services.AddSingleton<AirportController>(sp =>
-{
-    var fetcher = sp.GetRequiredService<IOpmetFetcher>();
-    return new AirportController(fetcher, timerDelayMinutes: 1);
-});
+    new AirportController(
+        sp.GetRequiredService<IInfoStation>(),
+        sp.GetRequiredService<AirportFactory>(),
+        timerDelayMinutes: 1
+    )
+);
 
-// 3) (almindelig Blazor Server ops�tning)
+// (valgfrit) eksponer også via interface hvis du har IAirportController
+// builder.Services.AddSingleton<IAirportController>(sp => sp.GetRequiredService<AirportController>());
+
+// ---------- Blazor Server ----------
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
 
-// 4) Hvis AirportInfoService skal k�re noget init der bruger DI, g�r det EFTER Build()
+// ---------- Init og bootstrap efter Build() ----------
 using (var scope = app.Services.CreateScope())
 {
+    // Loader airports-data til AirportInfoService (infra)
     await AirportInfoService.createAirportInfo();
 
+    // Sørg for at TEST altid er aktiv
     var controller = scope.ServiceProvider.GetRequiredService<AirportController>();
-    // Sikr at TEST er tracket fra start
-    controller.getAirport("TEST");
+    await controller.GetAirportAsync("TEST");
 }
 
-// 5) Pipeline
+// ---------- Pipeline ----------
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -65,6 +84,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
+
 app.MapGet("/healthz", () => Results.Ok("ok"));
 
 app.MapRazorComponents<App>()

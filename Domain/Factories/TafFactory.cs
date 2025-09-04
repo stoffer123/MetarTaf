@@ -1,4 +1,4 @@
-﻿using MetarTaf_Backend.Models;
+﻿using Domain.Reports;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using Taf.Decoder;
 using Taf.Decoder.entity;
 
-namespace MetarTaf_Backend.Factories
+namespace Domain.Factories
 {
-    internal class TafFactory
+    public class TafFactory
     {
         public TafFactory() { }
 

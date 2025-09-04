@@ -25,7 +25,7 @@ namespace MetarTaf_Tests
             var html = Row("METAR", "EKCH", "091920Z 17008KT 9999 BKN190/// 18/15 Q1018 NOSIG");
             var fetcher = new NorthAviMetFetcher(ClientFor(html));
 
-            var (metar, taf) = await fetcher.GetLatestPerIcaoAsync(new[] { "EKCH" });
+            var (metar, taf) = await fetcher.GetLatestPerIcaoRawAsync(new[] { "EKCH" });
             metar["EKCH"].Should().Be("METAR EKCH 091920Z 17008KT 9999 BKN190/// 18/15 Q1018 NOSIG");
             taf.Should().BeEmpty();
         }
@@ -36,7 +36,7 @@ namespace MetarTaf_Tests
             var html = Row("METAR COR", "EKCH", "091921Z 17010KT 9999 FEW020 18/15 Q1018");
             var fetcher = new NorthAviMetFetcher(ClientFor(html));
 
-            var (metar, _) = await fetcher.GetLatestPerIcaoAsync(new[] { "EKCH" });
+            var (metar, _) = await fetcher.GetLatestPerIcaoRawAsync(new[] { "EKCH" });
             metar["EKCH"].Should().Be("METAR COR EKCH 091921Z 17010KT 9999 FEW020 18/15 Q1018");
         }
 
@@ -46,7 +46,7 @@ namespace MetarTaf_Tests
             var html = Row("SPECI", "EKCH", "091925Z 18012KT 6000 SHRA SCT018CB 18/14 Q1017");
             var fetcher = new NorthAviMetFetcher(ClientFor(html));
 
-            var (metar, _) = await fetcher.GetLatestPerIcaoAsync(new[] { "EKCH" });
+            var (metar, _) = await fetcher.GetLatestPerIcaoRawAsync(new[] { "EKCH" });
             metar["EKCH"].Should().Be("METAR EKCH 091925Z 18012KT 6000 SHRA SCT018CB 18/14 Q1017");
         }
 
@@ -56,7 +56,7 @@ namespace MetarTaf_Tests
             var html = Row("SPECI COR", "EKCH", "091926Z 18012KT 6000 SHRA SCT018CB 18/14 Q1017");
             var fetcher = new NorthAviMetFetcher(ClientFor(html));
 
-            var (metar, _) = await fetcher.GetLatestPerIcaoAsync(new[] { "EKCH" });
+            var (metar, _) = await fetcher.GetLatestPerIcaoRawAsync(new[] { "EKCH" });
             metar["EKCH"].Should().Be("METAR COR EKCH 091926Z 18012KT 6000 SHRA SCT018CB 18/14 Q1017");
         }
 
@@ -66,7 +66,7 @@ namespace MetarTaf_Tests
             var html = Row("TAF", "EKCH", "091714Z 0918/1018 17012KT CAVOK");
             var fetcher = new NorthAviMetFetcher(ClientFor(html));
 
-            var (_, taf) = await fetcher.GetLatestPerIcaoAsync(new[] { "EKCH" });
+            var (_, taf) = await fetcher.GetLatestPerIcaoRawAsync(new[] { "EKCH" });
             taf["EKCH"].Should().Be("TAF EKCH 091714Z 0918/1018 17012KT CAVOK");
         }
 
@@ -76,7 +76,7 @@ namespace MetarTaf_Tests
             var html = Row("TAF AMD", "EKCH", "091800Z 0918/1018 16012KT CAVOK");
             var fetcher = new NorthAviMetFetcher(ClientFor(html));
 
-            var (_, taf) = await fetcher.GetLatestPerIcaoAsync(new[] { "EKCH" });
+            var (_, taf) = await fetcher.GetLatestPerIcaoRawAsync(new[] { "EKCH" });
             taf["EKCH"].Should().Be("TAF AMD EKCH 091800Z 0918/1018 16012KT CAVOK");
         }
 
@@ -87,7 +87,7 @@ namespace MetarTaf_Tests
             var html = Row("TAF", "EKCH", "COR 091802Z 0918/1018 16012KT CAVOK");
             var fetcher = new NorthAviMetFetcher(ClientFor(html));
 
-            var (_, taf) = await fetcher.GetLatestPerIcaoAsync(new[] { "EKCH" });
+            var (_, taf) = await fetcher.GetLatestPerIcaoRawAsync(new[] { "EKCH" });
             taf["EKCH"].Should().Be("TAF COR EKCH 091802Z 0918/1018 16012KT CAVOK");
         }
 
@@ -104,7 +104,7 @@ namespace MetarTaf_Tests
 
             var fetcher = new NorthAviMetFetcher(ClientFor(text));
 
-            var (metar, taf) = await fetcher.GetLatestPerIcaoAsync(new[] { "EKCH" });
+            var (metar, taf) = await fetcher.GetLatestPerIcaoRawAsync(new[] { "EKCH" });
             metar["EKCH"].Should().Be("METAR COR EKCH 091955Z 17010KT 9999 FEW020 18/15 Q1018");
             taf["EKCH"].Should().Be("TAF COR EKCH 091805Z 0918/1018 16012KT CAVOK");
         }

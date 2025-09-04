@@ -4,25 +4,41 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MetarTaf_Backend.Services;
+using Domain.Reports;
+using Domain.Ports;
+using System.Collections.Immutable;
 
 namespace MetarTaf_Backend.Models
 {
-    internal class AirportInfoStation : IInfoStation
+    public class AirportInfoStation : IInfoStation
     {
         private readonly List<IAirport> observers;
         private readonly MetarService metarService;
         private readonly TafService tafService;
-        private readonly AirportController airportController;
 
         // Sikrer at kun en fetch kan kører ad gangen
         private readonly SemaphoreSlim _fetchGate = new(1, 1);
 
-        public AirportInfoStation(AirportController airportController, IOpmetFetcher fetcher)
+        public AirportInfoStation(IOpmetFetcher fetcher)
         {
-            this.airportController = airportController;
             observers = new List<IAirport>();
-            metarService = new MetarService(this, airportController, fetcher);
-            tafService   = new TafService(this, airportController, fetcher);
+            metarService = new MetarService(this, fetcher);
+            tafService   = new TafService(this, fetcher);
+        }
+
+        public ImmutableList<IAirport> GetObservers()
+        {
+            return observers.ToImmutableList();
+        }
+
+        public List<string> GetObserverIcaos()
+        {
+            var icaoSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var observer in observers)
+            {
+                icaoSet.Add(observer.airportInfo.icaoId);
+            }
+            return icaoSet.ToList();
         }
 
         public async void addObserver(IAirport observer)
@@ -78,7 +94,6 @@ namespace MetarTaf_Backend.Models
             {
                 Console.WriteLine($"Fetching reports at {DateTime.UtcNow:HH:mm:ss} UTC...");
                 await Task.WhenAll(metarService.fetchMetars(), tafService.FetchTafs());
-                airportController.ResetFetchTimerAfterFetch();
                 return true;
             }
             catch (Exception ex)

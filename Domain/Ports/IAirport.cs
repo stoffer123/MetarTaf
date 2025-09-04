@@ -1,14 +1,17 @@
-﻿using System;
+﻿using Domain.Reports;
+using Domain.ValueObjects;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MetarTaf_Backend.Models
+namespace Domain.Ports
 {
     public interface IAirport : IDisposable
     {
         event Action? Updated;
+        AirportInfo airportInfo { get; }
         void updateMetars();
         void updateTafs();
         void updateAirportInfo();

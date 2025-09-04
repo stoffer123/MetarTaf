@@ -1,6 +1,6 @@
-﻿using Metar.Decoder.Entity;
-using MetarTaf_Backend.Factories;
-using MetarTaf_Backend.Models;
+﻿using Domain.Factories;
+using Domain.Ports;
+using Domain.Reports;
 
 namespace MetarTaf_Backend.Services
 {
@@ -9,19 +9,18 @@ namespace MetarTaf_Backend.Services
         private readonly Dictionary<string, Dictionary<DateTime, MetarReport>> metars = new();
         private readonly MetarFactory metarFactory = new();
         private readonly IInfoStation infoStation;
-        private readonly AirportController airportController;
         private readonly IOpmetFetcher fetcher;
 
-        public MetarService(IInfoStation infostation, AirportController airportController, IOpmetFetcher fetcher)
+        public MetarService(IInfoStation infostation, IOpmetFetcher fetcher)
         {
             this.infoStation = infostation;
-            this.airportController = airportController;
             this.fetcher = fetcher;
         }
 
         public async Task fetchMetars()
         {
-            var icaoList = airportController.getAirportIcaoList().ToArray();
+            var icaoList = infoStation.GetObserverIcaos().ToArray();
+
             if (icaoList.Length == 0)
             {
                 infoStation.notifyMetarChange();
@@ -30,7 +29,7 @@ namespace MetarTaf_Backend.Services
 
             try
             {
-                var (metarMap, _) = await fetcher.GetLatestPerIcaoAsync(icaoList, windValidTime: 0);
+                var (metarMap, _) = await fetcher.GetLatestPerIcaoRawAsync(icaoList, windValidTime: 0);
 
                 foreach (var kv in metarMap)
                 {

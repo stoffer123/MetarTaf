@@ -8,8 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Metar.Decoder" Version="1.0.8" />
-    <PackageReference Include="Taf.Decoder" Version="1.0.5" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
 </Project>

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Taf.Decoder.entity;
 
-namespace MetarTaf_Backend.Models
+namespace Domain.Reports
 {
     public class MetarReport : Report
     {

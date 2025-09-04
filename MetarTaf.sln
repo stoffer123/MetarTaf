@@ -9,10 +9,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetarTaf", "MetarTaf\MetarT
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetarTaf_Backend", "MetarTaf_Backend\MetarTaf_Backend.csproj", "{173606EE-523C-4B45-AB4E-EAF63FA9DE01}"
+	ProjectSection(ProjectDependencies) = postProject
+		{672A38AA-AD0E-49F1-A907-695C4C2C008B} = {672A38AA-AD0E-49F1-A907-695C4C2C008B}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetarTaf_Tests", "MetarTaf_Tests\MetarTaf_Tests.csproj", "{1B6B0484-AA1B-4869-B66B-EE183AA0D1CC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{672A38AA-AD0E-49F1-A907-695C4C2C008B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{6FE1327A-5037-47E7-A79C-0E2BA350FF24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +41,10 @@ Global
 		{672A38AA-AD0E-49F1-A907-695C4C2C008B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{672A38AA-AD0E-49F1-A907-695C4C2C008B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{672A38AA-AD0E-49F1-A907-695C4C2C008B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FE1327A-5037-47E7-A79C-0E2BA350FF24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FE1327A-5037-47E7-A79C-0E2BA350FF24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FE1327A-5037-47E7-A79C-0E2BA350FF24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FE1327A-5037-47E7-A79C-0E2BA350FF24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
