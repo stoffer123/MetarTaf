@@ -1,0 +1,120 @@
+﻿@page "/Overview"
+@using GUI.NewFolder
+<MudPaper Style="margin-left: 1%; margin-top: 1%">
+
+    <h3>Overview</h3>
+    <MudTextField @bind-Value="_indtastIcaoValue" Label="Tilføj ICAO" Variant="Variant.Text" onkeyup="OnIndtastIcaoKeyUp"></MudTextField>
+<MudTable Hover="true" Breakpoint="Breakpoint.Sm" Height="500px" FixedHeader="true"
+          Items="@Reports"
+          GroupBy="@_groupDefinition"
+          GroupHeaderStyle="background-color:var(--mud-palette-background-gray)"
+          Dense="_dense">
+
+    <HeaderContent>
+        <MudTh Style="width: 5%">Report Type</MudTh>
+            <MudTh Style="width: 10%">Report Time</MudTh>
+        <MudTh Style="width: 10%">Fetch Time</MudTh>
+        <MudTh Style="width: 75%">Raw Report</MudTh>
+    </HeaderContent>
+
+        <GroupHeaderTemplate>
+            <MudTh colspan="4" Class="mud-table-cell-custom-group">
+                Airport: @context.Key
+                <MudButton Color="Color.Primary" Size="Size.Small" Class="ms-4"
+                           OnClick="@(() => AcknowledgeAirport((string)context.Key))">
+                    Acknowledge
+                </MudButton>
+                <MudButton Color="Color.Primary" Size="Size.Small" Class="ms-4"
+                           OnClick="@(() => RemoveAirport((string)context.Key))">
+                    Remove
+                </MudButton>
+            </MudTh>
+        </GroupHeaderTemplate>
+
+
+    <RowTemplate>
+        <MudTd DataLabel="Report Type">@context.ReportType</MudTd>
+        <MudTd DataLabel="Report Time">@context.ReportTime.ToString("HH:mm")</MudTd>
+        <MudTd DataLabel="Report Time">@context.FetchTime.ToString("HH:mm")</MudTd>
+        <MudTd DataLabel="Raw Report">@context.RawReport</MudTd>
+    </RowTemplate>
+</MudTable>
+</MudPaper>
+<MudSwitch @bind-Value="_dense" Color="Color.Primary">Dense</MudSwitch>
+
+@code {
+    private bool _dense = false;
+    private string _indtastIcaoValue = "";
+    private TableGroupDefinition<AirportReport> _groupDefinition = new()
+    {
+        GroupName = "Airport",
+        Indentation = false,
+        Expandable = false,
+        Selector = (r) => r.AirportName
+    };
+
+    private IEnumerable<AirportReport> Reports = new List<AirportReport>(); //EksempeltData
+
+    protected override async Task OnInitializedAsync()
+    {
+        setEksempeltData();
+
+
+
+    }
+
+    private void AcknowledgeAirport(string airportName)
+    {
+        // Her kan du senere koble op til backend / SignalR
+        Console.WriteLine($"Acknowledged changes for {airportName}");
+    }
+
+    private void RemoveAirport(string airportName)
+    {
+        // Her unsubscribes airport fra backend OG fjernes fra den lokale liste
+        Console.WriteLine($"Removed {airportName}");
+    }
+
+    private void OnIndtastIcaoKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            //iværksæt http kald og subscribe til Icao i _indtastIcaoValue
+            Console.WriteLine($"Henter data for ICAO: {_indtastIcaoValue}");
+        }
+    }
+
+
+    private void setEksempeltData()
+    {
+        // Eksempeldata – i praksis henter du fra dit API
+        Reports = new List<AirportReport>
+        {
+            new AirportReport {
+                AirportName = "EKCH",
+                ReportType = "METAR",
+                ReportTime = DateTime.UtcNow,
+                RawReport = "METAR COR EKCH 111937Z 18008KT 8000 SCT025 17/11 Q1015"
+            },
+            new AirportReport {
+                AirportName = "EKCH",
+                ReportType = "TAF",
+                ReportTime = DateTime.UtcNow,
+                RawReport = "TAF EKCH 111937Z 1119/1219 8000 -SHRA SCT020 BKN030="
+            },
+            new AirportReport {
+                AirportName = "EKBI",
+                ReportType = "METAR",
+                ReportTime = DateTime.UtcNow,
+                RawReport = "METAR EKBI 111845Z 21008KT ..."
+            },
+            new AirportReport {
+                AirportName = "EKBI",
+                ReportType = "TAF",
+                ReportTime = DateTime.UtcNow,
+                RawReport = "TAF EKBI 111800Z 1118/1224 ..."
+            }
+        };
+    }
+
+}
